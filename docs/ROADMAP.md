@@ -35,12 +35,12 @@ O objetivo é transformar o aplicativo de uma ferramenta de registro manual em u
 *   **Modo Satelital Otimizado:**
     *   *Ação:* Toggle de economia extrema que reduz batimento cardíaco, intervalos de GPS e filtra telemetria redundante para reduzir custos M2M.
 
-## 🚀 FASE 4: Predição e Inteligência Avançada (PRÓXIMO PASSO)
-*   **Predição de Manutenção:**
+## 🚀 FASE 4: Predição e Inteligência Avançada (EM ANDAMENTO)
+*   **Predição de Manutenção (CONCLUÍDO):**
     *   *Ação:* Cruzamento de horímetro e alertas de sensores para sugerir paradas preventivas.
-*   **Cercas de Velocidade Dinâmicas:**
-    *   *Ação:* Ajuste automático do limite de velocidade baseado na operação atual.
-*   **Relatórios Locais Avançados:**
+*   **Cercas de Velocidade Dinâmicas (CONCLUÍDO):**
+    *   *Ação:* Ajuste automático do limite de velocidade baseado na operação atual (ex: Limite menor durante Plantio).
+*   **Relatórios Locais Avançados (PRÓXIMO PASSO):**
     *   *Ação:* Geração de PDF de produtividade direto no tablet para conferência rápida.
 
 ---

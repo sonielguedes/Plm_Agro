@@ -67,6 +67,27 @@ class PlmRepository(
 
     fun getFinishedJourneys(): Flow<List<Journey>> = plmDao.getFinishedJourneys()
 
+    suspend fun getOperationConfig(code: String): OperationConfigEntity? {
+        return plmDao.getOperationConfig(code)
+    }
+
+    suspend fun saveOperationConfig(config: OperationConfigEntity) {
+        plmDao.saveOperationConfig(config)
+    }
+
+    suspend fun seedOperationConfigsIfEmpty() {
+        if (plmDao.getOperationConfigsCount() == 0) {
+            val defaults = listOf(
+                OperationConfigEntity("PLANTIO", 8f, "Operação de Plantio"),
+                OperationConfigEntity("COLHEITA", 6f, "Operação de Colheita"),
+                OperationConfigEntity("PULVERIZACAO", 12f, "Operação de Pulverização"),
+                OperationConfigEntity("DESLOCAMENTO", 40f, "Deslocamento em Estrada")
+            )
+            defaults.forEach { plmDao.saveOperationConfig(it) }
+            Log.i("DB_SEED", "Seed de configurações de operação concluído.")
+        }
+    }
+
     suspend fun startJourney(journey: Journey) {
         // Validação: Deve haver um vínculo ativo
         val vinculo = activeVinculo.first() ?: throw IllegalStateException("Nao e possivel iniciar jornada sem veiculo vinculado.")

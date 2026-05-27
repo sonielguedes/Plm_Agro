@@ -128,18 +128,17 @@ class OutboxManager @Inject constructor(
     private suspend fun handleFailure(event: OutboxEventEntity, error: String) {
         val nextAttempt = event.retryCount + 1
         val isFinalFailure = nextAttempt >= 10 // Aumentado para resiliência industrial
-        val newStatus = if (isFinalFailure) "ERRO" else "TENTANDO"
-        
-        plmDao.updateSyncEvent(event.copy(
-            syncStatus = newStatus,
-            retryCount = nextAttempt,
-            lastAttempt = System.currentTimeMillis(),
-            errorMessage = error
-        ))
         
         if (isFinalFailure) {
-            Log.e("OUTBOX", "OUTBOX_EVENT_FAILED: ${event.eventId} - $error")
+            Log.e("OUTBOX", "OUTBOX_EVENT_FAILED_FINAL: ${event.eventId} - Movendo para DLQ. Erro: $error")
+            plmDao.moveToDeadLetter(event, error)
         } else {
+            plmDao.updateSyncEvent(event.copy(
+                syncStatus = "TENTANDO",
+                retryCount = nextAttempt,
+                lastAttempt = System.currentTimeMillis(),
+                errorMessage = error
+            ))
             Log.w("OUTBOX", "OUTBOX_EVENT_RETRY: ${event.eventId} (Tentativa $nextAttempt/10) - $error")
         }
     }

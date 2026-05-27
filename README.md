@@ -26,14 +26,23 @@ O **PLMAGRO** é uma solução robusta de telemetria e gestão operacional para 
 *   **DataStore:** Armazenamento seguro de configurações e estados de sincronização.
 *   **Retrofit & OkHttp:** Comunicação resiliente com APIs REST.
 
-## 📂 Estrutura de Documentação
+## 📂 Documentação Oficial (Industrial Enterprise)
 
-Para entender detalhes específicos do projeto, consulte os arquivos abaixo na raiz:
+O projeto segue um rigoroso padrão de documentação para garantir a sustentabilidade e escalabilidade. **Consulte a pasta `/docs` antes de qualquer alteração arquitetural.**
 
-*   [`DOCUMENTACAO_TELAS.md`](./DOCUMENTACAO_TELAS.md): Guia visual e funcional de cada tela.
-*   [`MELHORIAS_EFETUADAS.md`](./MELHORIAS_EFETUADAS.md): Log histórico de todas as versões e evoluções técnicas.
-*   [`AGENTE_10_10.md`](./AGENTE_10_10.md): Roadmap estratégico para atingir a excelência industrial.
-*   [`GUIA_NOVO_PROJETO.md`](./GUIA_NOVO_PROJETO.md): Manual para replicar estas funcionalidades em novos aplicativos do zero.
+### 🏛 Core Knowledge
+- [**Guia do Programador**](./docs/PROGRAMADOR.md): Configurações, tokens e diretrizes de código.
+- [**Arquitetura do Sistema**](./docs/ARQUITETURA.md): Visão geral das camadas, stack e fluxo de dados.
+- [**Estratégia Offline-First**](./docs/OFFLINE_FIRST.md): Como garantimos zero perda de dados.
+- [**Protocolo IPS 2.2**](./docs/IPS_PROTOCOL.md): Detalhes da implementação nativa via Socket TCP.
+- [**Máquina de Estado (FSM)**](./docs/FSM.md): Estados operacionais e gatilhos.
+
+### 📈 Gestão e Evolução
+- [**Roadmap Estratégico**](./docs/ROADMAP.md): Fases do projeto e visão de futuro.
+- [**Log de Melhorias**](./docs/MELHORIAS_EFETUADAS.md): Histórico de versões e entregas.
+- [**Decisões Arquiteturais (ADR)**](./docs/ADR/): Registro de porquês técnicos.
+
+---
 
 ## ⚙️ Configuração do Ambiente
 

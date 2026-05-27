@@ -160,6 +160,13 @@ data class GeofenceEntity(
     val active: Boolean = true
 )
 
+@Entity(tableName = "operation_configs")
+data class OperationConfigEntity(
+    @PrimaryKey val operationCode: String,
+    val maxSpeed: Float,
+    val description: String
+)
+
 @Entity(tableName = "TabelaParadas")
 data class ParadaEntity(
     @PrimaryKey val uuid: String = java.util.UUID.randomUUID().toString(),

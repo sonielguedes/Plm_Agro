@@ -85,6 +85,22 @@ interface PlmDao {
     @Insert
     suspend fun insertDeadLetter(event: DeadLetterEventEntity)
 
+    @Transaction
+    suspend fun moveToDeadLetter(event: OutboxEventEntity, reason: String) {
+        val dlq = DeadLetterEventEntity(
+            eventId = event.eventId,
+            jornadaId = event.jornadaId,
+            tipoEvento = event.tipoEvento,
+            payloadJson = event.payloadJson,
+            motivoFalha = reason,
+            stacktrace = null,
+            tentativas = event.retryCount,
+            vehicleId = event.vehicleId
+        )
+        insertDeadLetter(dlq)
+        deleteSyncEvent(event)
+    }
+
     @Query("SELECT * FROM dead_letter_events ORDER BY horario DESC")
     fun getDeadLetters(): Flow<List<DeadLetterEventEntity>>
 
@@ -173,4 +189,14 @@ interface PlmDao {
         insertSyncEvent(outbox)
         insertEvent(event)
     }
+
+    // Configurações de Operação (Limites de Velocidade Dinâmicos)
+    @Query("SELECT * FROM operation_configs WHERE operationCode = :code LIMIT 1")
+    suspend fun getOperationConfig(code: String): OperationConfigEntity?
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun saveOperationConfig(config: OperationConfigEntity)
+
+    @Query("SELECT COUNT(*) FROM operation_configs")
+    suspend fun getOperationConfigsCount(): Int
 }

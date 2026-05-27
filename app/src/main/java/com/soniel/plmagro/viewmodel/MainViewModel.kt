@@ -206,6 +206,7 @@ class MainViewModel @Inject constructor(
 
     init {
         setupDefaultOperators()
+        seedDB()
         observeOperationalState()
         observeOperationalEvents()
         monitorSystemHealth()
@@ -219,6 +220,12 @@ class MainViewModel @Inject constructor(
                 alertManager?.playCriticalAlert()
                 _uiMessage.emit(message)
             }
+        }
+    }
+
+    private fun seedDB() {
+        viewModelScope.launch {
+            repository.seedOperationConfigsIfEmpty()
         }
     }
 
@@ -428,14 +435,29 @@ class MainViewModel @Inject constructor(
         viewModelScope.launch {
             val geofences = repository.getActiveGeofences().first()
             val active = geofences.find { it.name == _currentGeofenceName.value }
+            val journey = activeJourney.value
+            
+            // Buscar limite dinâmico da operação atual
+            val opConfig = journey?.operationCode?.let { repository.getOperationConfig(it) }
+            val opLimit = opConfig?.maxSpeed ?: 999f
+            
+            // O limite efetivo é o menor entre o da cerca e o da operação
+            val fenceLimit = if (active != null && active.maxSpeed > 0) active.maxSpeed else 999f
+            val effectiveLimit = Math.min(opLimit, fenceLimit)
             
             val wasSpeeding = _isSpeedingInGeofence.value
-            if (active != null && active.maxSpeed > 0) {
-                val isNowSpeeding = speedKmh > active.maxSpeed
+            if (effectiveLimit < 900f) {
+                val isNowSpeeding = speedKmh > effectiveLimit
                 _isSpeedingInGeofence.value = isNowSpeeding
                 
                 if (isNowSpeeding && !wasSpeeding) {
+                    val msg = if (opLimit < fenceLimit) 
+                        "Excesso de velocidade para a operação: ${journey?.operationCode}" 
+                      else "Excesso de velocidade na cerca: ${active?.name}"
+                    
                     alertManager?.playSpeedAlert()
+                    alertManager?.speak(msg)
+                    _uiMessage.emit("⚠️ $msg")
                 }
             } else {
                 _isSpeedingInGeofence.value = false

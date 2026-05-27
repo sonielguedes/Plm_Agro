@@ -19,6 +19,7 @@ Este documento registra a jornada de evolução técnica e funcional que levou o
 *   **Proteção de Rede Antifragile:** Tratamento de erros e timeouts que eliminam fechamentos inesperados.
 
 ### ⚙️ Engenharia e Arquitetura
+*   **Cercas de Velocidade Dinâmicas (v4.6.0):** Implementada lógica de limite de velocidade variável baseado na operação atual (Plantio, Colheita, etc) com alertas vocais integrados.
 *   **Predição de Manutenção (v4.5.0):** Módulo de monitoramento preditivo de horímetro com alertas vocais (TTS) e visuais para manutenção preventiva.
 *   **Modo Satelital Otimizado (v4.4.0):** Implementação de modo de baixo consumo de dados para antenas satelitais, com ajustes dinâmicos de GPS, Heartbeat e filtragem de telemetria.
 *   **Dashboard de Saúde Técnica:** Refatoração completa da tela de diagnóstico para incluir status de MQTT, CAN, Central Web e métricas detalhadas de hardware.

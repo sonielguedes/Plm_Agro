@@ -1,5 +1,7 @@
 # PROGRAMADOR.md — GUIA OFICIAL DE ENTRADA NO PROJETO PLMAGRO
 
+> **Nota Arquitetural:** Este guia foca em implementação e tokens. Para detalhes de design, consulte [ARQUITETURA.md](./ARQUITETURA.md), [OFFLINE_FIRST.md](./OFFLINE_FIRST.md) e [IPS_PROTOCOL.md](./IPS_PROTOCOL.md).
+
 # ACESSO WIALON
 
 ## TOKEN OFICIAL REMOTE API
