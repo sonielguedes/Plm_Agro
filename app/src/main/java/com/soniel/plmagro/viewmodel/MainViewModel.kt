@@ -212,6 +212,7 @@ class MainViewModel @Inject constructor(
         
         viewModelScope.launch {
             sensorWatchdog.alerts.collect { message ->
+                alertManager?.playCriticalAlert()
                 _uiMessage.emit(message)
             }
         }
@@ -342,6 +343,7 @@ class MainViewModel @Inject constructor(
             if (!_showAutoStopAlert.value) {
                 Log.w("INTEL", "DETECCAO_AUTOMATICA: Veiculo parado ha ${autoStopTimeoutMinutes.value} min sem apontamento")
                 _showAutoStopAlert.value = true
+                alertManager?.playOperationalNotice()
                 viewModelScope.launch { _uiMessage.emit("Atenção: Máquina parada. Registre o motivo da parada!") }
             }
         }

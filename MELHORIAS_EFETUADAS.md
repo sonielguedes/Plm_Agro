@@ -19,6 +19,7 @@ Este documento registra a jornada de evolução técnica e funcional que levou o
 *   **Proteção de Rede Antifragile:** Tratamento de erros e timeouts que eliminam fechamentos inesperados.
 
 ### ⚙️ Engenharia e Arquitetura
+*   **Feedback Sonoro e Háptico (v4.1.0):** Bipes e vibração integrados aos alertas de GPS e Paradas Automáticas.
 *   **Dagger-Hilt:** Arquitetura profissional com Injeção de Dependência.
 *   **Sincronização Delta:** Economia drástica de dados (M2M) através de cache persistente inteligente.
 *   **Industrial Logger:** Rastreabilidade total de eventos técnicos em formato JSON.

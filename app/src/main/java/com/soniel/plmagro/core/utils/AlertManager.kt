@@ -35,4 +35,32 @@ class AlertManager(private val context: Context) {
     fun playGeofenceEntry() {
         toneGenerator.startTone(ToneGenerator.TONE_PROP_ACK, 150)
     }
+
+    /**
+     * Alerta Crítico: GPS Travado ou Falha de Hardware.
+     * Som longo e vibração intensa.
+     */
+    fun playCriticalAlert() {
+        toneGenerator.startTone(ToneGenerator.TONE_CDMA_EMERGENCY_RINGBACK, 500)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(VibrationEffect.createOneShot(1000, VibrationEffect.DEFAULT_AMPLITUDE))
+        } else {
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(1000)
+        }
+    }
+
+    /**
+     * Aviso Operacional: Pedir motivo de parada ou sugestão de Geofence.
+     * Bipe duplo e vibração curta.
+     */
+    fun playOperationalNotice() {
+        toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP2, 300)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(VibrationEffect.createOneShot(200, VibrationEffect.DEFAULT_AMPLITUDE))
+        } else {
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(200)
+        }
+    }
 }
