@@ -7,6 +7,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.History
+import androidx.compose.material.icons.filled.PictureAsPdf
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.*
 import com.soniel.plmagro.core.utils.ShareUtils
@@ -119,9 +120,24 @@ fun HistoricalJourneyItem(journey: Journey, viewModel: MainViewModel, vehicleId:
                             },
                             modifier = Modifier.size(32.dp)
                         ) {
-                            Icon(Icons.Default.Share, contentDescription = "Compartilhar", tint = NeonGreen, modifier = Modifier.size(20.dp))
+                            Icon(Icons.Default.Share, contentDescription = "WhatsApp", tint = NeonGreen, modifier = Modifier.size(20.dp))
                         }
-                        Spacer(Modifier.width(8.dp))
+                        
+                        IconButton(
+                            onClick = { 
+                                ShareUtils.generateAndSharePdf(
+                                    context, 
+                                    vehicleId, 
+                                    "Matrícula: ${journey.operatorMatricula}", 
+                                    journey.kmFinal ?: journey.lastKm, 
+                                    s
+                                ) 
+                            },
+                            modifier = Modifier.size(32.dp)
+                        ) {
+                            Icon(Icons.Default.PictureAsPdf, contentDescription = "PDF", tint = Color.Red, modifier = Modifier.size(20.dp))
+                        }
+                        Spacer(Modifier.width(4.dp))
                     }
 
                     Surface(
@@ -142,8 +158,12 @@ fun HistoricalJourneyItem(journey: Journey, viewModel: MainViewModel, vehicleId:
 
             Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                 Column {
-                    Text("KM RODADO", color = Color.Gray, fontSize = 10.sp)
-                    Text("${"%.2f".format(summary?.distanceKm ?: 0.0)} KM", color = Color.White, fontWeight = FontWeight.Bold)
+                    Text("KM FINAL", color = Color.Gray, fontSize = 10.sp)
+                    Text("${journey.kmFinal ?: journey.lastKm}", color = Color.White, fontWeight = FontWeight.Bold)
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text("HORÍMETRO", color = Color.Gray, fontSize = 10.sp)
+                    Text("${"%.2f".format(journey.lastHorimetro)}h", color = Color.White, fontWeight = FontWeight.Bold)
                 }
                 Column(horizontalAlignment = Alignment.End) {
                     Text("DURAÇÃO", color = Color.Gray, fontSize = 10.sp)
@@ -151,6 +171,13 @@ fun HistoricalJourneyItem(journey: Journey, viewModel: MainViewModel, vehicleId:
                     val m = summary?.durationMillis?.let { (it / (1000 * 60)) % 60 } ?: 0
                     Text("${h}h ${m}m", color = Color.White, fontWeight = FontWeight.Bold)
                 }
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                Text("OP: ${journey.operationCode}", color = Color.LightGray, fontSize = 11.sp)
+                Text("CC: ${journey.costCenter}", color = Color.LightGray, fontSize = 11.sp)
             }
 
             if (summary?.visitedAreas?.isNotEmpty() == true) {

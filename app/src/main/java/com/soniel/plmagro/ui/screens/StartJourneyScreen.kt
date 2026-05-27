@@ -14,6 +14,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.soniel.plmagro.ui.components.NumericKeypad
 import com.soniel.plmagro.ui.components.PlmButton
 import com.soniel.plmagro.ui.theme.CardBackground
@@ -24,9 +25,9 @@ import androidx.compose.material.icons.filled.BatteryChargingFull
 
 @Composable
 fun StartJourneyScreen(viewModel: MainViewModel, onBack: () -> Unit, onStart: (String, String, String) -> Unit) {
-    val activeVinculo by viewModel.activeVinculo.collectAsState()
-    val gpsAccuracy by viewModel.gpsAccuracy.collectAsState()
-    val healthState by viewModel.healthState.collectAsState()
+    val activeVinculo by viewModel.activeVinculo.collectAsStateWithLifecycle()
+    val gpsAccuracy by viewModel.gpsAccuracy.collectAsStateWithLifecycle()
+    val healthState by viewModel.healthState.collectAsStateWithLifecycle()
 
     var step by remember { mutableStateOf(1) } // 1: KM Inicial, 2: Operação, 3: Centro de Custo
     
@@ -39,14 +40,17 @@ fun StartJourneyScreen(viewModel: MainViewModel, onBack: () -> Unit, onStart: (S
 
     // Efeito para carregar o KM do Wialon/PLMView assim que a tela abre
     LaunchedEffect(activeVinculo) {
+        android.util.Log.d("JOURNEY_INIT", "Vinculo atual: ${activeVinculo?.wialonNome} | KM: ${activeVinculo?.ultimoKmWialon}")
         activeVinculo?.let { vinculo ->
             if (vinculo.ultimoKmWialon > 0 && kmInicial.isEmpty()) {
+                android.util.Log.i("JOURNEY_INIT", "Preenchendo KM Inicial automaticamente: ${vinculo.ultimoKmWialon}")
                 kmInicial = vinculo.ultimoKmWialon.toInt().toString()
             }
         }
     }
 
     LaunchedEffect(Unit) {
+        viewModel.refreshActiveVinculoKm()
         viewModel.uiMessage.collect { message ->
             snackbarHostState.showSnackbar(message)
         }

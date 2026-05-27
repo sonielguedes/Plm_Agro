@@ -42,6 +42,7 @@ fun LinkFleetScreen(
     
     val isLoadingLink by linkFleetViewModel.isLoading.collectAsStateWithLifecycle()
     val isAnyLoading = isMainLoading || isLoadingLink
+    val remoteData by linkFleetViewModel.selectedUnitData.collectAsStateWithLifecycle()
 
     val isAdmin by configuracoesViewModel.desbloqueado.collectAsStateWithLifecycle()
     val isError by configuracoesViewModel.isError.collectAsStateWithLifecycle()
@@ -49,6 +50,16 @@ fun LinkFleetScreen(
     
     var searchQuery by remember { mutableStateOf("") }
     var manualFleetCode by remember { mutableStateOf("") }
+    
+    var remotePlaca by remember { mutableStateOf("") }
+    var remoteTipo by remember { mutableStateOf("") }
+
+    LaunchedEffect(remoteData) {
+        remoteData?.let {
+            remotePlaca = it["placa"] as? String ?: ""
+            remoteTipo = it["tipo"] as? String ?: ""
+        }
+    }
     
     var selectedUnit by remember { mutableStateOf<WialonUnit?>(null) }
     var showConfirmDialog by remember { mutableStateOf(false) }
@@ -65,8 +76,8 @@ fun LinkFleetScreen(
                 linkFleetViewModel.vincularFrota(
                     codigoFrota = config?.fleetCode ?: manualFleetCode,
                     unit = it,
-                    placa = config?.plate ?: "",
-                    tipo = config?.type ?: "",
+                    placa = if (remotePlaca.isNotBlank()) remotePlaca else (config?.plate ?: ""),
+                    tipo = if (remoteTipo.isNotBlank()) remoteTipo else (config?.type ?: ""),
                     operador = "ADMIN",
                     adminDesbloqueado = true
                 )
@@ -170,8 +181,8 @@ fun LinkFleetScreen(
                         linkFleetViewModel.vincularFrota(
                             codigoFrota = fleetToUse,
                             unit = selectedUnit,
-                            placa = config?.plate ?: "",
-                            tipo = config?.type ?: "",
+                            placa = if (remotePlaca.isNotBlank()) remotePlaca else (config?.plate ?: ""),
+                            tipo = if (remoteTipo.isNotBlank()) remoteTipo else (config?.type ?: ""),
                             operador = "OPERADOR",
                             adminDesbloqueado = isAdmin
                         )
@@ -261,6 +272,7 @@ fun LinkFleetScreen(
                     isAlreadyLinked = isAlreadyLinked,
                     onSelect = { 
                         selectedUnit = unit 
+                        linkFleetViewModel.fetchUnitData(unit.id)
                         // Sugerir o nome da unidade como código da frota se estiver vazio
                         if (manualFleetCode.isEmpty()) {
                             manualFleetCode = unit.nm
@@ -302,6 +314,26 @@ fun LinkFleetScreen(
                         Column(horizontalAlignment = Alignment.End) {
                             Text("UNIDADE WIALON", color = Color.Gray, fontSize = 10.sp)
                             Text(selectedUnit!!.nm, color = Color.White, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                    
+                    if (remotePlaca.isNotBlank() || remoteTipo.isNotBlank()) {
+                        Spacer(modifier = Modifier.height(12.dp))
+                        HorizontalDivider(color = Color.DarkGray)
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text("DADOS DO SERVIDOR", color = Color.Gray, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+                        
+                        if (remotePlaca.isNotBlank()) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("Placa:", color = Color.LightGray, fontSize = 12.sp)
+                                Text(remotePlaca, color = NeonGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            }
+                        }
+                        if (remoteTipo.isNotBlank()) {
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                Text("Tipo:", color = Color.LightGray, fontSize = 12.sp)
+                                Text(remoteTipo, color = NeonGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            }
                         }
                     }
                     

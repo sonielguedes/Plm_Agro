@@ -205,4 +205,20 @@ interface PlmDao {
 
     @Query("SELECT COUNT(*) FROM operation_configs")
     suspend fun getOperationConfigsCount(): Int
+
+    // Mensagens e Alertas Industriais (Fase 5)
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertMessage(message: MessageEntity): Long
+
+    @Query("SELECT * FROM messages ORDER BY timestamp DESC")
+    fun getAllMessages(): Flow<List<MessageEntity>>
+
+    @Query("SELECT COUNT(*) FROM messages WHERE isRead = 0")
+    fun getUnreadMessagesCount(): Flow<Int>
+
+    @Query("UPDATE messages SET isRead = 1 WHERE id = :id")
+    suspend fun markMessageAsRead(id: Long)
+
+    @Query("SELECT EXISTS(SELECT 1 FROM messages WHERE wialonId = :wialonId)")
+    suspend fun messageExists(wialonId: Long): Boolean
 }

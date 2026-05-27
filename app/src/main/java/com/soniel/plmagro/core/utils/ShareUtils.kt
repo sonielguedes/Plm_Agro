@@ -36,6 +36,7 @@ object ShareUtils {
             ------------------------------------------
             ⏱ *Duração do Turno:* ${h}h ${m}m
             🛣 *KM Final:* $kmFinal
+            ⚙️ *Horímetro:* ${"%.2f".format(summary.horimetroFinal).replace('.', ',')}
             📏 *Distância Rodada:* ${"%.2f".format(summary.distanceKm)} KM
             ⛽ *Abastecimentos:* ${summary.refuelingCount}
             
@@ -99,6 +100,8 @@ object ShareUtils {
         canvas.drawText("Duração do Turno: ${h}h ${m}m", 60f, y, paint)
         y += 25f
         canvas.drawText("KM Final: $kmFinal", 60f, y, paint)
+        y += 25f
+        canvas.drawText("Horímetro: ${"%.2f".format(summary.horimetroFinal).replace('.', ',')}", 60f, y, paint)
         y += 25f
         canvas.drawText("Distância Rodada: ${"%.2f".format(summary.distanceKm)} KM", 60f, y, paint)
         y += 25f

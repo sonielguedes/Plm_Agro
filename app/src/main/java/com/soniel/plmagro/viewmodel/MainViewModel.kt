@@ -41,7 +41,8 @@ data class JourneySummary(
     val durationMillis: Long,
     val distanceKm: Double,
     val refuelingCount: Int,
-    val visitedAreas: List<String>
+    val visitedAreas: List<String>,
+    val horimetroFinal: Double = 0.0
 )
 
 
@@ -112,6 +113,28 @@ class MainViewModel @Inject constructor(
         viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList()
     )
 
+    val allMessages = repository.allMessages.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList()
+    )
+
+    val unreadMessagesCount = repository.unreadMessagesCount.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), 0
+    )
+
+    fun markMessageAsRead(messageId: Long) {
+        viewModelScope.launch {
+            repository.markMessageAsRead(messageId)
+        }
+    }
+
+    fun markAllMessagesAsRead() {
+        viewModelScope.launch {
+            allMessages.value.filter { !it.isRead }.forEach {
+                repository.markMessageAsRead(it.id)
+            }
+        }
+    }
+
     val journeyEvents = activeJourney.flatMapLatest { journey ->
         if (journey != null) repository.getJourneyEvents(journey.id)
         else flowOf(emptyList())
@@ -124,16 +147,16 @@ class MainViewModel @Inject constructor(
     val currentLocation: StateFlow<Pair<Double, Double>?> = _currentLocation
 
     private val _currentGeofence = MutableStateFlow<GeofenceEntity?>(null)
-    val currentGeofence: StateFlow<GeofenceEntity?> = _currentGeofence
+    val currentGeofence: StateFlow<GeofenceEntity?> = _currentGeofence.asStateFlow()
 
     private val _currentGeofenceName = MutableStateFlow<String?>(null)
-    val currentGeofenceName: StateFlow<String?> = _currentGeofenceName
+    val currentGeofenceName: StateFlow<String?> = _currentGeofenceName.asStateFlow()
 
     private val _isSpeedingInGeofence = MutableStateFlow(false)
-    val isSpeedingInGeofence: StateFlow<Boolean> = _isSpeedingInGeofence
+    val isSpeedingInGeofence: StateFlow<Boolean> = _isSpeedingInGeofence.asStateFlow()
 
     private val _isNightMode = MutableStateFlow(false)
-    val isNightMode: StateFlow<Boolean> = _isNightMode
+    val isNightMode: StateFlow<Boolean> = _isNightMode.asStateFlow()
 
     private val _satelliteCount = MutableStateFlow(0)
     val satelliteCount: StateFlow<Int> = _satelliteCount
@@ -209,11 +232,27 @@ class MainViewModel @Inject constructor(
         startSyncIfEnabled()
         autoConnectWialon()
         recoverActiveJourney()
+        observeNewMessages()
         
         viewModelScope.launch {
             sensorWatchdog.alerts.collect { message ->
                 alertManager?.playCriticalAlert()
                 _uiMessage.emit(message)
+            }
+        }
+    }
+
+    private fun observeNewMessages() {
+        viewModelScope.launch {
+            repository.allMessages.collect { messages ->
+                val unread = messages.filter { !it.isRead }
+                if (unread.isNotEmpty()) {
+                    val lastUnread = unread.maxByOrNull { it.timestamp }
+                    if (lastUnread != null && lastUnread.timestamp > System.currentTimeMillis() - 10000) {
+                        alertManager?.playMessageReceived()
+                        alertManager?.speak("Nova mensagem recebida da central")
+                    }
+                }
             }
         }
     }
@@ -281,7 +320,7 @@ class MainViewModel @Inject constructor(
     private var lastMovementTime = System.currentTimeMillis()
     private var stoppedMovementCount = 0 // Contador para retomada automatica
     private val _showAutoStopAlert = MutableStateFlow(false)
-    val showAutoStopAlert: StateFlow<Boolean> = _showAutoStopAlert
+    val showAutoStopAlert: StateFlow<Boolean> = _showAutoStopAlert.asStateFlow()
 
     private fun observeOperationalEvents() {
         viewModelScope.launch {
@@ -390,7 +429,7 @@ class MainViewModel @Inject constructor(
                         
                         // Inteligência 10/10: Automação por Nome da Cerca
                         // Padrão esperado: "[CODIGO_OP] Nome da Area"
-                        val regex = Regex("\\[(.*?)\\]")
+                        val regex = Regex("\\[(.*?)]")
                         val match = regex.find(active.name)
                         val autoOpCode = match?.groupValues?.get(1)
                         
@@ -438,7 +477,7 @@ class MainViewModel @Inject constructor(
             
             // O limite efetivo é o menor entre o da cerca e o da operação
             val fenceLimit = if (active != null && active.maxSpeed > 0) active.maxSpeed else 999f
-            val effectiveLimit = Math.min(opLimit, fenceLimit)
+            val effectiveLimit = minOf(opLimit, fenceLimit)
             
             val wasSpeeding = _isSpeedingInGeofence.value
             if (effectiveLimit < 900f) {
@@ -484,7 +523,7 @@ class MainViewModel @Inject constructor(
             while (currentCoroutineContext().isActive) {
                 // Monitoramento de Horário para Modo Noturno (Passo D)
                 val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
-                _isNightMode.value = hour >= 18 || hour < 6
+                _isNightMode.value = hour !in 6..17
 
                 // Monitoramento Preditivo de Manutenção (Fase 4)
                 checkMaintenanceAlerts()
@@ -622,7 +661,7 @@ class MainViewModel @Inject constructor(
                     lastMaintenanceAlertTime = now
                     viewModelScope.launch { _uiMessage.emit("⚠️ $msg") }
                 }
-            } else if (hoursLeft <= 0 && target > 0) {
+            } else if (hoursLeft <= 0) {
                 val now = System.currentTimeMillis()
                 if (now - lastMaintenanceAlertTime > 600000) { // A cada 10 min se venceu
                     val msg = "URGENTE: Manutenção Vencida há ${Math.abs(hoursLeft).toInt()} horas!"
@@ -721,6 +760,27 @@ class MainViewModel @Inject constructor(
     }
     
     fun maskString(s: String?) = sessionManager.maskString(s)
+
+    fun refreshActiveVinculoKm() {
+        viewModelScope.launch {
+            val vinculo = activeVinculo.value ?: return@launch
+            Log.d("WIALON", "Atualizando KM do vinculo: ${vinculo.wialonNome}")
+            val result = wialonRepository.getUnitData(vinculo.wialonUnitId)
+            result.onSuccess { data ->
+                val newKm = data["km"] as? Double ?: 0.0
+                if (newKm > 0) {
+                    val updatedVinculo = vinculo.copy(
+                        ultimoKmWialon = newKm,
+                        atualizadoEm = System.currentTimeMillis()
+                    )
+                    repository.vincularFrota(updatedVinculo, force = true)
+                    Log.i("WIALON", "KM do vinculo atualizado: $newKm")
+                }
+            }.onFailure { e ->
+                Log.e("WIALON", "Erro ao atualizar KM do vinculo", e)
+            }
+        }
+    }
 
     fun syncGeofences() {
         viewModelScope.launch {
@@ -852,13 +912,15 @@ class MainViewModel @Inject constructor(
                 
                 val config = vehicleConfig.value
                 val vinculo = activeVinculo.value
+                val hIni = vinculo?.ultimoKmWialon ?: 0.0
                 
                 repository.startJourney(
                     Journey(
                         operatorMatricula = matricula,
                         vehicleId = config?.fleetCode ?: "DESCONHECIDO",
                         kmInicial = km,
-                        horimetroInicial = vinculo?.ultimoKmWialon ?: 0.0, // Usando o último horímetro conhecido
+                        horimetroInicial = hIni,
+                        lastHorimetro = hIni, // Começa do horímetro total para ser acumulativo industrial
                         operationCode = opCode,
                         costCenter = cc
                     )
@@ -888,7 +950,8 @@ class MainViewModel @Inject constructor(
             durationMillis = (journey.endTime ?: System.currentTimeMillis()) - journey.startTime,
             distanceKm = journey.accumulatedDistance / 1000.0,
             refuelingCount = refuelingCount,
-            visitedAreas = visited.map { it.replace("Cerca: ", "") }
+            visitedAreas = visited.map { it.replace("Cerca: ", "") },
+            horimetroFinal = journey.lastHorimetro
         )
     }
 

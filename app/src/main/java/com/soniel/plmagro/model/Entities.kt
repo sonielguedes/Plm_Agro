@@ -182,3 +182,14 @@ data class ParadaEntity(
     val horimetro: Double,
     val syncStatus: String = "PENDENTE"
 )
+
+@Entity(tableName = "messages")
+data class MessageEntity(
+    @PrimaryKey(autoGenerate = true) val id: Long = 0,
+    val wialonId: Long? = null,
+    val text: String,
+    val sender: String = "CENTRAL",
+    val timestamp: Long = System.currentTimeMillis(),
+    val isRead: Boolean = false,
+    val priority: Int = 0 // 0: Normal, 1: Alerta, 2: Crítico
+)

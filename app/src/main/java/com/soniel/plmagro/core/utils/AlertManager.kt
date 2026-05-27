@@ -87,4 +87,18 @@ class AlertManager(private val context: Context) : TextToSpeech.OnInitListener {
             vibrator.vibrate(200)
         }
     }
+
+    /**
+     * Alerta de Mensagem: Nova mensagem da central recebida.
+     * Bipe melodioso e vibração rápida.
+     */
+    fun playMessageReceived() {
+        toneGenerator.startTone(ToneGenerator.TONE_PROP_BEEP, 200)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            vibrator.vibrate(VibrationEffect.createWaveform(longArrayOf(0, 100, 50, 100), -1))
+        } else {
+            @Suppress("DEPRECATION")
+            vibrator.vibrate(200)
+        }
+    }
 }

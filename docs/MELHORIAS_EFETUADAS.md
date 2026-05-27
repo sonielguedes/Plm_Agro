@@ -19,6 +19,8 @@ Este documento registra a jornada de evolução técnica e funcional que levou o
 *   **Proteção de Rede Antifragile:** Tratamento de erros e timeouts que eliminam fechamentos inesperados.
 
 ### ⚙️ Engenharia e Arquitetura
+*   **Expansão do Menu Industrial (v4.9.0):** Implementação de novos pontos de controle no menu lateral, incluindo visualização da Fila de Sincronização (Outbox), Central de Mensagens (Chat), Gatilho de Sincronização Manual e atalhos para Vínculo de Frota.
+*   **Módulo de Mensagens da Central (v4.9.0):** Nova tela para visualização de instruções e alertas enviados pela logística via Wialon API, com suporte a prioridades e confirmação de leitura.
 *   **Módulo de Performance Operacional (v4.8.0):** Cálculo em tempo real de % de produtividade, tempo operando vs parado e velocidade média. Inclui alertas vocais do "Coach de Operação" para incentivar a produtividade no campo.
 *   **Relatórios Locais Avançados (PDF) (v4.7.0):** Implementação da geração de boletins operacionais em formato PDF diretamente no tablet, facilitando a conferência e o compartilhamento industrial sem dependência de nuvem.
 *   **Cercas de Velocidade Dinâmicas (v4.6.0):** Implementada lógica de limite de velocidade variável baseado na operação atual (Plantio, Colheita, etc) com alertas vocais integrados.

@@ -14,8 +14,8 @@ android {
         applicationId = "com.soniel.plmagro"
         minSdk = 24
         targetSdk = 35
-        versionCode = 48
-        versionName = "4.8.0-RELEASE"
+        versionCode = 49
+        versionName = "4.9.0-RELEASE"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -76,6 +76,8 @@ dependencies {
     implementation(libs.hilt.android)
     ksp(libs.hilt.compiler)
     implementation(libs.hilt.navigation.compose)
+    implementation(libs.hilt.work)
+    ksp(libs.hilt.work.compiler)
 
     testImplementation(libs.junit)
     androidTestImplementation(platform(libs.androidx.compose.bom))

@@ -35,6 +35,7 @@ sealed class Screen(val route: String) {
     object PermissionIntro : Screen("permission_intro")
     object Logbook : Screen("logbook")
     object About : Screen("about")
+    object Messages : Screen("messages")
 }
 
 @Composable
@@ -228,6 +229,8 @@ fun NavGraph(
                 onNavigateToLinkFleet = { navController.navigate(Screen.LinkFleet.route) },
                 onNavigateToOperationalSettings = { navController.navigate(Screen.Settings.route) },
                 onNavigateToAbout = { navController.navigate(Screen.About.route) },
+                onNavigateToMessages = { navController.navigate(Screen.Messages.route) },
+                onSyncNow = { viewModel.performFullSync() },
                 onLogout = {
                     navController.navigate(Screen.Login.route) {
                         popUpTo(Screen.Dashboard.route) { inclusive = true }
@@ -350,6 +353,9 @@ fun NavGraph(
         }
         composable(Screen.About.route) {
             AboutSystemScreen(onBack = { navController.popBackStack() })
+        }
+        composable(Screen.Messages.route) {
+            MessagesScreen(viewModel = viewModel, onBack = { navController.popBackStack() })
         }
     }
 }

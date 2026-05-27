@@ -14,11 +14,12 @@ import com.soniel.plmagro.api.WialonSessionManager
 import com.soniel.plmagro.core.outbox.OutboxManager
 import com.soniel.plmagro.model.UserPreferencesManager
 import dagger.hilt.android.HiltAndroidApp
+import androidx.hilt.work.HiltWorkerFactory
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltAndroidApp
-class PlmApplication : Application() {
+class PlmApplication : Application(), Configuration.Provider {
     companion object {
         lateinit var instance: PlmApplication
             private set
@@ -32,6 +33,12 @@ class PlmApplication : Application() {
     @Inject lateinit var diagnosticRepository: DiagnosticRepository
     @Inject lateinit var outboxManager: OutboxManager
     @Inject lateinit var sensorWatchdog: com.soniel.plmagro.core.watchdog.SensorWatchdog
+    @Inject lateinit var workerFactory: HiltWorkerFactory
+
+    override val workManagerConfiguration: Configuration
+        get() = Configuration.Builder()
+            .setWorkerFactory(workerFactory)
+            .build()
 
     override fun onCreate() {
         super.onCreate()

@@ -18,7 +18,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -30,8 +29,6 @@ import com.soniel.plmagro.viewmodel.MainViewModel
 import com.soniel.plmagro.viewmodel.WialonConnectionStatus
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
-import java.text.SimpleDateFormat
-import java.util.*
 
 private val DashboardBlack = Color(0xFF121212)
 private val DashboardCard = Color(0xFF1E1E1E)
@@ -67,10 +64,13 @@ fun DashboardScreen(
     onNavigateToLinkFleet: () -> Unit,
     onNavigateToOperationalSettings: () -> Unit,
     onNavigateToAbout: () -> Unit,
+    onNavigateToMessages: () -> Unit,
+    onSyncNow: () -> Unit,
     onLogout: () -> Unit
 ) {
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
 
     val wialonStatus by viewModel.wialonConnectionStatus.collectAsStateWithLifecycle()
     val ipsStatusRaw by viewModel.ipsConnectionStatus.collectAsStateWithLifecycle()
@@ -78,6 +78,7 @@ fun DashboardScreen(
     val activeJourney by viewModel.activeJourney.collectAsStateWithLifecycle()
     val fsmState by viewModel.currentState.collectAsStateWithLifecycle()
     val diagState by viewModel.diagnosticState.collectAsStateWithLifecycle()
+    val unreadCount by viewModel.unreadMessagesCount.collectAsStateWithLifecycle()
 
     val hasIpsLink = !activeVinculo?.wialonUniqueId.isNullOrBlank()
     val ipsStatus = if (hasIpsLink) ipsStatusRaw else WialonConnectionStatus.OFFLINE
@@ -89,127 +90,299 @@ fun DashboardScreen(
         }
     }
 
-    Scaffold(
-        snackbarHost = { SnackbarHost(snackbarHostState) },
-        containerColor = DashboardBlack
-    ) { padding ->
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding)
-                .verticalScroll(rememberScrollState())
-                .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
-        ) {
-            // Header Simples
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween
+    ModalNavigationDrawer(
+        drawerState = drawerState,
+        drawerContent = {
+            ModalDrawerSheet(
+                drawerContainerColor = DashboardCard,
+                modifier = Modifier.width(280.dp)
             ) {
-                Column {
-                    Text("PLMAGRO", color = NeonGreen, fontSize = 20.sp, fontWeight = FontWeight.Black)
-                    Text("OPERACIONAL VEICULAR", color = Color.White, fontSize = 10.sp)
-                }
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    IconButton(onClick = onNavigateToLogbook) { Icon(Icons.AutoMirrored.Filled.Assignment, "Jornada", tint = NeonGreen) }
-                    IconButton(onClick = onNavigateToSettings) { Icon(Icons.Default.Settings, "Config", tint = Color.White) }
-                    IconButton(onClick = onLogout) { Icon(Icons.AutoMirrored.Filled.Logout, "Sair", tint = Color.White) }
-                }
-            }
-
-            // Status Bar (API/IPS)
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                StatusIndicator("API", wialonStatus)
-                StatusIndicator("IPS", ipsStatus)
-            }
-
-            // Card do Veiculo
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = DashboardCard),
-                shape = RoundedCornerShape(8.dp)
-            ) {
+                Spacer(Modifier.height(24.dp))
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                        Text(if (activeVinculo == null) "NÃO VINCULADO" else "VINCULADO: ${activeVinculo?.wialonNome}", 
-                            color = if (activeVinculo == null) DashboardDanger else NeonGreen, 
-                            fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                        
-                        if (diagState.alertaManutencaoAtivo) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Icon(Icons.Default.Build, null, tint = Color.Yellow, modifier = Modifier.size(14.dp))
-                                Spacer(Modifier.width(4.dp))
-                                Text("REVISÃO: ${diagState.horasParaManutencao.toInt()}h", color = Color.Yellow, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                    Text("PLMAGRO", color = NeonGreen, fontSize = 24.sp, fontWeight = FontWeight.Black)
+                    Text("MENU INDUSTRIAL", color = Color.Gray, fontSize = 12.sp)
+                }
+                HorizontalDivider(color = Color.DarkGray, modifier = Modifier.padding(vertical = 8.dp))
+                
+                NavigationDrawerItem(
+                    label = { 
+                        Row(verticalAlignment = Alignment.CenterVertically) {
+                            Text("Mensagens da Central", color = Color.White, modifier = Modifier.weight(1f))
+                            if (unreadCount > 0) {
+                                Badge(containerColor = Color.Red) {
+                                    Text("$unreadCount", color = Color.White)
+                                }
                             }
                         }
-                    }
-                    Text(vehicleId, color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Black)
-                    Text("Placa: $vehiclePlate", color = Color.Gray, fontSize = 14.sp)
-                    Spacer(Modifier.height(8.dp))
-                    Text("OPERADOR: $operatorName", color = Color.White, fontWeight = FontWeight.Bold)
-                }
-            }
+                    },
+                    selected = false,
+                    onClick = { 
+                        scope.launch { drawerState.close() }
+                        onNavigateToMessages() 
+                    },
+                    icon = { 
+                        BadgedBox(
+                            badge = {
+                                if (unreadCount > 0) {
+                                    Badge(containerColor = Color.Red)
+                                }
+                            }
+                        ) {
+                            Icon(Icons.Default.Message, null, tint = NeonGreen)
+                        }
+                    },
+                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                )
 
-            // Grid de Dados 3x2 (Fase 4: Produtividade)
-            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    SimpleStatCard("VELOCIDADE", "$speed km/h", Modifier.weight(1f))
-                    SimpleStatCard("KM ATUAL", kmAtual, Modifier.weight(1f))
-                }
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    SimpleStatCard("PRODUTIVIDADE", "${diagState.produtividadePercent}%", Modifier.weight(1f), 
-                        valueColor = if(diagState.produtividadePercent > 80) NeonGreen else if(diagState.produtividadePercent > 50) Color.Yellow else DashboardDanger)
-                    SimpleStatCard("VELOC. MÉDIA", "${"%.1f".format(diagState.velocidadeMediaOperacao)} km/h", Modifier.weight(1f))
-                }
-                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                    SimpleStatCard("KM RODADO", "$kmRodado KM", Modifier.weight(1f))
-                    SimpleStatCard("SINAL GPS", if(satelliteCount > 0) "Ativo ($satelliteCount)" else "Sem Sinal", Modifier.weight(1f))
-                }
-            }
+                NavigationDrawerItem(
+                    label = { Text("Diário de Bordo", color = Color.White) },
+                    selected = false,
+                    onClick = { 
+                        scope.launch { drawerState.close() }
+                        onNavigateToLogbook() 
+                    },
+                    icon = { Icon(Icons.AutoMirrored.Filled.Assignment, null, tint = NeonGreen) },
+                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                )
 
-            // Status Central
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFF252525)),
-                shape = RoundedCornerShape(8.dp)
+                NavigationDrawerItem(
+                    label = { Text("Histórico de Viagens", color = Color.White) },
+                    selected = false,
+                    onClick = { 
+                        scope.launch { drawerState.close() }
+                        onNavigateToHistory() 
+                    },
+                    icon = { Icon(Icons.Default.History, null, tint = NeonGreen) },
+                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                )
+
+                HorizontalDivider(color = Color.DarkGray, modifier = Modifier.padding(vertical = 8.dp))
+
+                NavigationDrawerItem(
+                    label = { Text("Diagnóstico de Hardware", color = Color.White) },
+                    selected = false,
+                    onClick = { 
+                        scope.launch { drawerState.close() }
+                        onNavigateToDiagnostic() 
+                    },
+                    icon = { Icon(Icons.Default.Analytics, null, tint = NeonGreen) },
+                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                )
+
+                NavigationDrawerItem(
+                    label = { Text("Fila de Sincronização", color = Color.White) },
+                    selected = false,
+                    onClick = { 
+                        scope.launch { drawerState.close() }
+                        onNavigateToEvents() 
+                    },
+                    icon = { Icon(Icons.Default.SyncAlt, null, tint = NeonGreen) },
+                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                )
+
+                NavigationDrawerItem(
+                    label = { Text("Sincronizar Agora", color = Color.White) },
+                    selected = false,
+                    onClick = { 
+                        scope.launch { 
+                            drawerState.close()
+                            onSyncNow()
+                        }
+                    },
+                    icon = { Icon(Icons.Default.Refresh, null, tint = NeonGreen) },
+                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                )
+
+                HorizontalDivider(color = Color.DarkGray, modifier = Modifier.padding(vertical = 8.dp))
+
+                NavigationDrawerItem(
+                    label = { Text("Vincular Frota (Wialon)", color = Color.White) },
+                    selected = false,
+                    onClick = { 
+                        scope.launch { drawerState.close() }
+                        onNavigateToLinkFleet() 
+                    },
+                    icon = { Icon(Icons.Default.Link, null, tint = NeonGreen) },
+                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                )
+
+                NavigationDrawerItem(
+                    label = { Text("Configurações", color = Color.White) },
+                    selected = false,
+                    onClick = { 
+                        scope.launch { drawerState.close() }
+                        onNavigateToSettings() 
+                    },
+                    icon = { Icon(Icons.Default.Settings, null, tint = NeonGreen) },
+                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                )
+
+                NavigationDrawerItem(
+                    label = { Text("Sobre o Sistema", color = Color.White) },
+                    selected = false,
+                    onClick = { 
+                        scope.launch { drawerState.close() }
+                        onNavigateToAbout() 
+                    },
+                    icon = { Icon(Icons.Default.Info, null, tint = NeonGreen) },
+                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                )
+
+                Spacer(Modifier.weight(1f))
+                HorizontalDivider(color = Color.DarkGray)
+                
+                NavigationDrawerItem(
+                    label = { Text("Sair do Aplicativo", color = DashboardDanger) },
+                    selected = false,
+                    onClick = { 
+                        scope.launch { drawerState.close() }
+                        onLogout() 
+                    },
+                    icon = { Icon(Icons.AutoMirrored.Filled.Logout, null, tint = DashboardDanger) },
+                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                )
+                Spacer(Modifier.height(16.dp))
+            }
+        }
+    ) {
+        Scaffold(
+            snackbarHost = { SnackbarHost(snackbarHostState) },
+            containerColor = DashboardBlack
+        ) { padding ->
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Column(modifier = Modifier.padding(24.dp).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                    Text("STATUS INDUSTRIAL", color = DashboardMuted, fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    Text(statusText, color = industrialStatusColor(statusText), fontSize = 32.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)
+                // Header com Título à esquerda e Menu à direita
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween
+                ) {
+                    Column {
+                        Text("PLMAGRO", color = NeonGreen, fontSize = 20.sp, fontWeight = FontWeight.Black)
+                        Text("OPERACIONAL VEICULAR", color = Color.White, fontSize = 10.sp)
+                    }
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        IconButton(onClick = onNavigateToMessages) {
+                            BadgedBox(
+                                badge = {
+                                    if (unreadCount > 0) {
+                                        Badge(containerColor = Color.Red) {
+                                            Text("$unreadCount", color = Color.White)
+                                        }
+                                    }
+                                }
+                            ) {
+                                Icon(Icons.Default.Email, "Mensagens", tint = NeonGreen)
+                            }
+                        }
+                        IconButton(onClick = onNavigateToLogbook) { 
+                            Icon(Icons.AutoMirrored.Filled.Assignment, "Jornada", tint = NeonGreen) 
+                        }
+                        IconButton(onClick = { scope.launch { drawerState.open() } }) {
+                            Icon(Icons.Default.Menu, "Abrir Menu", tint = Color.White)
+                        }
+                    }
                 }
-            }
 
-            // Botões de Ação Grandes
-            Row(modifier = Modifier.fillMaxWidth().height(80.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Button(
-                    onClick = { if (activeJourney == null) onNavigateToJourney() else onInformOperation() },
-                    modifier = Modifier.weight(1f).fillMaxHeight(),
-                    colors = ButtonDefaults.buttonColors(containerColor = NeonGreen),
+                // Status Bar (API/IPS)
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    StatusIndicator("API", wialonStatus)
+                    StatusIndicator("IPS", ipsStatus)
+                }
+
+                // Card do Veiculo
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = DashboardCard),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Icon(Icons.Default.Settings, null, tint = Color.Black)
-                    Spacer(Modifier.width(8.dp))
-                    Text("OPERAÇÃO", color = Color.Black, fontWeight = FontWeight.Bold)
+                    Column(modifier = Modifier.padding(16.dp)) {
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            Text(if (activeVinculo == null) "NÃO VINCULADO" else "VINCULADO: ${activeVinculo?.wialonNome}", 
+                                color = if (activeVinculo == null) DashboardDanger else NeonGreen, 
+                                fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                            
+                            if (diagState.alertaManutencaoAtivo) {
+                                Row(verticalAlignment = Alignment.CenterVertically) {
+                                    Icon(Icons.Default.Build, null, tint = Color.Yellow, modifier = Modifier.size(14.dp))
+                                    Spacer(Modifier.width(4.dp))
+                                    Text("REVISÃO: ${diagState.horasParaManutencao.toInt()}h", color = Color.Yellow, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                                }
+                            }
+                        }
+                        Text(vehicleId, color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Black)
+                        Text("Placa: $vehiclePlate", color = Color.Gray, fontSize = 14.sp)
+                        Spacer(Modifier.height(8.dp))
+                        Text("OPERADOR: $operatorName", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
                 }
-                Button(
-                    onClick = onInformStop,
-                    modifier = Modifier.weight(1f).fillMaxHeight(),
-                    colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray),
+
+                // Grid de Dados 3x2 (Fase 4: Produtividade)
+                Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        SimpleStatCard("VELOCIDADE", "$speed km/h", Modifier.weight(1f))
+                        SimpleStatCard("KM ATUAL", kmAtual, Modifier.weight(1f))
+                    }
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        SimpleStatCard("PRODUTIVIDADE", "${diagState.produtividadePercent}%", Modifier.weight(1f), 
+                            valueColor = if(diagState.produtividadePercent > 80) NeonGreen else if(diagState.produtividadePercent > 50) Color.Yellow else DashboardDanger)
+                        SimpleStatCard("VELOC. MÉDIA", "${"%.1f".format(diagState.velocidadeMediaOperacao)} km/h", Modifier.weight(1f))
+                    }
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        SimpleStatCard("KM RODADO", "$kmRodado KM", Modifier.weight(1f))
+                        SimpleStatCard("SINAL GPS", if(satelliteCount > 0) "Ativo ($satelliteCount)" else "Sem Sinal", Modifier.weight(1f))
+                    }
+                }
+
+                // Status Central
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(containerColor = Color(0xFF252525)),
                     shape = RoundedCornerShape(8.dp)
                 ) {
-                    Icon(Icons.Default.Pause, null, tint = Color.White)
-                    Spacer(Modifier.width(8.dp))
-                    Text("PARADA", color = Color.White, fontWeight = FontWeight.Bold)
+                    Column(modifier = Modifier.padding(24.dp).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("STATUS INDUSTRIAL", color = DashboardMuted, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text(statusText, color = industrialStatusColor(statusText), fontSize = 32.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)
+                    }
                 }
-            }
 
-            Spacer(modifier = Modifier.weight(1f))
+                // Botões de Ação Grandes
+                Row(modifier = Modifier.fillMaxWidth().height(80.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Button(
+                        onClick = { if (activeJourney == null) onNavigateToJourney() else onInformOperation() },
+                        modifier = Modifier.weight(1f).fillMaxHeight(),
+                        colors = ButtonDefaults.buttonColors(containerColor = NeonGreen),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Icon(Icons.Default.Settings, null, tint = Color.Black)
+                        Spacer(Modifier.width(8.dp))
+                        Text("OPERAÇÃO", color = Color.Black, fontWeight = FontWeight.Bold)
+                    }
+                    Button(
+                        onClick = onInformStop,
+                        modifier = Modifier.weight(1f).fillMaxHeight(),
+                        colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray),
+                        shape = RoundedCornerShape(8.dp)
+                    ) {
+                        Icon(Icons.Default.Pause, null, tint = Color.White)
+                        Spacer(Modifier.width(8.dp))
+                        Text("PARADA", color = Color.White, fontWeight = FontWeight.Bold)
+                    }
+                }
 
-            // Rodapé
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                Text("GPS: $gpsLocation", color = DashboardMuted, fontSize = 10.sp)
-                Text(currentTime, color = DashboardMuted, fontSize = 10.sp)
+                Spacer(modifier = Modifier.weight(1f))
+
+                // Rodapé
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                    Text("GPS: $gpsLocation", color = DashboardMuted, fontSize = 10.sp)
+                    Text(currentTime, color = DashboardMuted, fontSize = 10.sp)
+                }
             }
         }
     }

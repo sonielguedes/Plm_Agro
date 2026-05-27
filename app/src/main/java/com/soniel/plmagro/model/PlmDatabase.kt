@@ -21,9 +21,10 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         TelemetriaEntity::class,
         GeofenceEntity::class,
         ParadaEntity::class,
-        OperationConfigEntity::class
+        OperationConfigEntity::class,
+        MessageEntity::class
     ],
-    version = 23,
+    version = 24,
     exportSchema = false
 )
 @TypeConverters(PlmConverters::class)
@@ -33,6 +34,12 @@ abstract class PlmDatabase : RoomDatabase() {
     companion object {
         @Volatile
         private var INSTANCE: PlmDatabase? = null
+
+        private val MIGRATION_23_24 = object : Migration(23, 24) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("CREATE TABLE IF NOT EXISTS `messages` (`id` INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, `wialonId` INTEGER, `text` TEXT NOT NULL, `sender` TEXT NOT NULL, `timestamp` INTEGER NOT NULL, `isRead` INTEGER NOT NULL, `priority` INTEGER NOT NULL)")
+            }
+        }
 
         private val MIGRATION_22_23 = object : Migration(22, 23) {
             override fun migrate(db: SupportSQLiteDatabase) {
@@ -155,7 +162,7 @@ abstract class PlmDatabase : RoomDatabase() {
                     PlmDatabase::class.java,
                     "plm_agro_database"
                 )
-                .addMigrations(MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23)
+                .addMigrations(MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23, MIGRATION_23_24)
                 .setJournalMode(JournalMode.WRITE_AHEAD_LOGGING)
                 .build()
                 INSTANCE = instance

@@ -112,6 +112,26 @@ fun SettingsScreen(
                     StatusIndicator(label = "CAN", techStatus = diagnosticState.can)
                     StatusIndicator(label = "WEB", techStatus = diagnosticState.web)
                 }
+
+                // Error Banner for Wialon
+                if (diagnosticState.wialon.status == ConnectionStatus.ERROR || diagnosticState.wialon.status == ConnectionStatus.AUTH_FAILED) {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF442222)),
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 4.dp),
+                        shape = RoundedCornerShape(4.dp)
+                    ) {
+                        Row(modifier = Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                            Icon(Icons.Default.Warning, contentDescription = null, tint = Color.Red, modifier = Modifier.size(16.dp))
+                            Spacer(Modifier.width(8.dp))
+                            Text(
+                                "WIALON: ${diagnosticState.wialon.errorMessage ?: "Erro de autenticação ou conexão"}",
+                                color = Color.White,
+                                fontSize = 10.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
+                }
             }
         }
     ) { padding ->
@@ -154,7 +174,14 @@ fun SettingsScreen(
                     InfoRow(label = "Jornada Ativa:", value = activeJourney?.operatorMatricula ?: "NENHUMA", color = if (activeJourney != null) NeonGreen else Color.Gray)
                     val opCount by viewModel.operators.collectAsStateWithLifecycle()
                     InfoRow(label = "Motoristas na Memória:", value = "${opCount.size}", color = if (opCount.isNotEmpty()) NeonGreen else Color.Yellow)
-                    InfoRow(label = "Eventos Pendentes:", value = pendingCount.toString(), color = if (pendingCount > 0) Color.Yellow else NeonGreen)
+                    
+                    val totalPending = diagnosticState.pendingSync + diagnosticState.pendingTelemetry + diagnosticState.pendingEvents
+                    InfoRow(label = "Eventos Pendentes:", value = "$totalPending", color = if (totalPending > 0) Color.Yellow else NeonGreen)
+                    
+                    if (diagnosticState.lastSyncError != null) {
+                        InfoRow(label = "Último Erro Sync:", value = diagnosticState.lastSyncError ?: "", color = Color.Red)
+                    }
+
                     InfoRow(label = "Latência MQTT:", value = "${health.mqttLatency}ms")
                     InfoRow(label = "Última Sinc.:", value = SimpleDateFormat("HH:mm:ss", Locale.getDefault()).format(Date(health.lastSync)))
                 }

@@ -58,17 +58,19 @@ object AppModule {
     fun provideWialonRepository(
         sessionManager: WialonSessionManager,
         userPreferencesManager: UserPreferencesManager,
-        diagnosticRepository: DiagnosticRepository
+        diagnosticRepository: DiagnosticRepository,
+        plmDao: PlmDao
     ): WialonRepository {
-        return WialonRepository(sessionManager, userPreferencesManager, diagnosticRepository)
+        return WialonRepository(sessionManager, userPreferencesManager, diagnosticRepository, plmDao)
     }
 
     @Provides
     @Singleton
     fun provideOutboxManager(
         plmDao: PlmDao,
-        wialonRepository: WialonRepository
+        wialonRepository: WialonRepository,
+        @ApplicationContext context: Context
     ): OutboxManager {
-        return OutboxManager(plmDao, wialonRepository)
+        return OutboxManager(plmDao, wialonRepository, context)
     }
 }

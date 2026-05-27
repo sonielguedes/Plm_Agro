@@ -405,6 +405,9 @@ class PlmRepository(
             hashIntegridade = calculateSha256(payload)
         )
         plmDao.insertSyncEvent(event)
+        
+        // Dispara sincronização em segundo plano via WorkManager
+        com.soniel.plmagro.PlmApplication.instance.outboxManager.enqueueOneTimeSync()
     }
 
     suspend fun vincularFrota(vinculo: VinculoFrotaWialonEntity, force: Boolean = false): Result<Unit> {
@@ -574,4 +577,18 @@ class PlmRepository(
         val lm = context.getSystemService(Context.LOCATION_SERVICE) as LocationManager
         return lm.isProviderEnabled(LocationManager.GPS_PROVIDER)
     }
+
+    // Gestão de Mensagens (Fase 5)
+    val allMessages: Flow<List<MessageEntity>> = plmDao.getAllMessages()
+    val unreadMessagesCount: Flow<Int> = plmDao.getUnreadMessagesCount()
+
+    suspend fun saveMessage(message: MessageEntity) {
+        plmDao.insertMessage(message)
+    }
+
+    suspend fun markMessageAsRead(id: Long) {
+        plmDao.markMessageAsRead(id)
+    }
+
+    suspend fun messageExists(wialonId: Long): Boolean = plmDao.messageExists(wialonId)
 }

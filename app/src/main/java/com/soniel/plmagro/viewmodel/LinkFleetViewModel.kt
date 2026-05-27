@@ -27,6 +27,27 @@ class LinkFleetViewModel(
     private val _vinculoSucesso = MutableSharedFlow<Boolean>()
     val vinculoSucesso = _vinculoSucesso.asSharedFlow()
 
+    private val _selectedUnitData = MutableStateFlow<Map<String, Any>?>(null)
+    val selectedUnitData: StateFlow<Map<String, Any>?> = _selectedUnitData
+
+    fun fetchUnitData(unitId: Long) {
+        viewModelScope.launch {
+            try {
+                _isLoading.value = true
+                val result = wialonRepository?.getUnitData(unitId)
+                _selectedUnitData.value = result?.getOrNull()
+            } catch (e: Exception) {
+                Log.e("LINK_WIALON", "Erro ao buscar dados da unidade", e)
+            } finally {
+                _isLoading.value = false
+            }
+        }
+    }
+
+    fun clearSelectedUnitData() {
+        _selectedUnitData.value = null
+    }
+
     fun vincularFrota(
         codigoFrota: String?,
         unit: WialonUnit?,

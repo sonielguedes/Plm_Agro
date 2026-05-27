@@ -30,6 +30,7 @@ import java.util.*
 @Composable
 fun HistoryScreen(viewModel: MainViewModel, onBack: () -> Unit) {
     val events by viewModel.journeyEvents.collectAsStateWithLifecycle()
+    val activeJourney by viewModel.activeJourney.collectAsStateWithLifecycle()
     val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
 
     Column(
@@ -50,9 +51,35 @@ fun HistoryScreen(viewModel: MainViewModel, onBack: () -> Unit) {
             )
         }
         
-        Text("Linha do tempo de eventos em tempo real", color = Color.Gray, modifier = Modifier.padding(start = 48.dp))
-
-        Spacer(modifier = Modifier.height(24.dp))
+        activeJourney?.let { journey ->
+            Card(
+                colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
+                modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+                shape = MaterialTheme.shapes.small
+            ) {
+                Row(
+                    modifier = Modifier.padding(12.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column {
+                        Text("DURAÇÃO ATUAL", color = Color.Gray, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                        val elapsed = System.currentTimeMillis() - journey.startTime
+                        val h = elapsed / (1000 * 60 * 60)
+                        val m = (elapsed / (1000 * 60)) % 60
+                        Text("${h}h ${m}m", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Black)
+                    }
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text("DISTÂNCIA", color = Color.Gray, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                        Text("${"%.2f".format(journey.accumulatedDistance / 1000.0)} KM", color = Color.White, fontSize = 16.sp, fontWeight = FontWeight.Black)
+                    }
+                    Column(horizontalAlignment = Alignment.End) {
+                        Text("KM ATUAL", color = Color.Gray, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                        Text("${journey.lastKm}", color = NeonGreen, fontSize = 16.sp, fontWeight = FontWeight.Black)
+                    }
+                }
+            }
+        }
 
         if (events.isEmpty()) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -67,13 +94,17 @@ fun HistoryScreen(viewModel: MainViewModel, onBack: () -> Unit) {
                         "ABASTECIMENTO" -> Icons.Default.LocalGasStation
                         "OPERACAO_ALTERADA" -> Icons.Default.PlayArrow
                         "ERRO_GPS", "PERDA_GPS" -> Icons.Default.GpsOff
+                        "ENTROU_NA_CERCA" -> Icons.Default.LocationOn
+                        "SAIU_DA_CERCA" -> Icons.Default.LocationOff
+                        "EXCESSO_VELOCIDADE" -> Icons.Default.Warning
                         else -> Icons.Default.Info
                     }
 
                     // Lógica de cores solicitada: Paradas em Vermelho, Produtivo em Verde
                     val color = when {
-                        event.type.contains("PARADA") || event.type.contains("GPS") -> Color.Red
+                        event.type.contains("PARADA") || event.type.contains("GPS") || event.type.contains("EXCESSO") -> Color.Red
                         event.type.contains("OPERACAO") || event.type.contains("MOVIMENTO") || event.type == "RETOMADA_OPERACAO" -> StatusMovement
+                        event.type.contains("CERCA") -> Color.Yellow
                         else -> when (event.severity) {
                             1 -> StatusMovement // SUCCESS/INFO GREEN
                             2 -> Color.Yellow // WARNING

@@ -22,7 +22,8 @@ import javax.inject.Singleton
 class WialonRepository @Inject constructor(
     private val sessionManager: WialonSessionManager,
     private val userPreferencesManager: UserPreferencesManager,
-    private val diagnosticRepository: DiagnosticRepository? = null
+    private val diagnosticRepository: DiagnosticRepository? = null,
+    private val plmDao: PlmDao? = null
 ) {
     private val ipsClient = WialonIpsClient()
     private val gson = Gson()
@@ -364,13 +365,6 @@ class WialonRepository @Inject constructor(
     }
 
     suspend fun syncOperators(): Result<List<Operator>> = withContext(Dispatchers.IO) {
-        val lastSync = userPreferencesManager.lastOperatorsSync.first()
-        // Otimização: Evita sync de motoristas nos últimos 30 minutos
-        if (System.currentTimeMillis() - lastSync < 1800000 && lastSync > 0) {
-            IndustrialLogger.d("WialonRepo", "Pulando sync de motoristas (Cache persistente)")
-            return@withContext Result.success(emptyList())
-        }
-
         // Aumentando flags para capturar motoristas de todos os recursos acessíveis
         val resParams = gson.toJson(mapOf(
             "spec" to mapOf("itemsType" to "avl_resource", "propName" to "sys_name", "propValueMask" to "*", "sortType" to "sys_name"),
@@ -417,7 +411,26 @@ class WialonRepository @Inject constructor(
             val response = getService().checkCommands(params = gson.toJson(mapOf("itemId" to unitId)), sessionId = sessionManager.getEid() ?: "")
             if (response.isSuccessful && response.body()?.isJsonArray == true) {
                 response.body()!!.asJsonArray.forEach { cmd ->
-                    if (cmd.asJsonObject.get("n")?.asString == "plm_status") sendRemoteDiagnostic(unitId)
+                    val cmdObj = cmd.asJsonObject
+                    val cmdName = cmdObj.get("n")?.asString
+                    val cmdId = cmdObj.get("id")?.asLong ?: 0L
+                    
+                    when (cmdName) {
+                        "plm_status" -> sendRemoteDiagnostic(unitId)
+                        "msg", "message", "alerta" -> {
+                            val text = cmdObj.get("p")?.asString ?: ""
+                            if (text.isNotBlank() && plmDao != null) {
+                                if (!plmDao.messageExists(cmdId)) {
+                                    plmDao.insertMessage(MessageEntity(
+                                        wialonId = cmdId,
+                                        text = text,
+                                        priority = if (cmdName == "alerta") 1 else 0
+                                    ))
+                                    Log.i("CHAT", "Nova mensagem recebida: $text")
+                                }
+                            }
+                        }
+                    }
                 }
             }
             Unit
@@ -430,10 +443,10 @@ class WialonRepository @Inject constructor(
             val unit = body.item
             val km = unit?.pos?.c?.toDouble()?.div(1000.0) ?: 0.0
             
-            // Extrair placa e tipo de propriedades comuns do Wialon
+            // Extrair placa e tipo de propriedades comuns do Wialon (Custom e Profile)
             val prp = unit?.prp ?: emptyMap()
-            val placa = prp["registration_plate"] ?: prp["placa"] ?: ""
-            val tipo = prp["vehicle_type"] ?: prp["tipo"] ?: ""
+            val placa = prp["pht"] ?: prp["registration_plate"] ?: prp["placa"] ?: prp["profile_registration_plate"] ?: ""
+            val tipo = prp["vt"] ?: prp["vehicle_type"] ?: prp["tipo"] ?: prp["profile_vehicle_type"] ?: ""
             
             mapOf(
                 "km" to km,

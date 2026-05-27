@@ -4,6 +4,10 @@ import android.util.Log
 import com.soniel.plmagro.api.WialonRepository
 import com.soniel.plmagro.model.PlmDao
 import com.soniel.plmagro.model.OutboxEventEntity
+import com.soniel.plmagro.sync.OutboxSyncWorker
+import androidx.work.*
+import android.content.Context
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -12,10 +16,28 @@ import kotlin.math.pow
 @Singleton
 class OutboxManager @Inject constructor(
     private val plmDao: PlmDao,
-    private val wialonRepository: WialonRepository
+    private val wialonRepository: WialonRepository,
+    @ApplicationContext private val context: Context
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private var syncJob: Job? = null
+
+    fun enqueueOneTimeSync() {
+        val constraints = Constraints.Builder()
+            .setRequiredNetworkType(NetworkType.CONNECTED)
+            .build()
+
+        val syncRequest = OneTimeWorkRequestBuilder<OutboxSyncWorker>()
+            .setConstraints(constraints)
+            .setBackoffCriteria(BackoffPolicy.EXPONENTIAL, 30, java.util.concurrent.TimeUnit.SECONDS)
+            .build()
+
+        WorkManager.getInstance(context).enqueueUniqueWork(
+            "OneTimeIndustrialSync",
+            ExistingWorkPolicy.REPLACE,
+            syncRequest
+        )
+    }
 
     fun startSyncLoop() {
         if (syncJob?.isActive == true) return
