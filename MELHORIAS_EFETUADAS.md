@@ -16,6 +16,7 @@ Este documento registra as evoluções técnicas e funcionais implementadas para
 *   **Checklist de Partida (v3.6.0):** Implementada validação de sinal GPS e Bateria antes de iniciar a jornada. Garante que veículos leves/pesados comecem o trajeto com o hodômetro digital calibrado e sinal estável.
 *   **Retomada Automática (v3.7.0):** Inteligência de campo que detecta se o motorista saiu dirigindo sem encerrar uma parada. O app agora volta para "OPERANDO" automaticamente se detectar velocidade > 10 km/h por tempo prolongado.
 *   **Alerta de Jornada Esquecida (v3.8.0):** Se o veículo entrar em movimento (>15km/h) sem que um operador tenha iniciado a jornada, o app emite um alerta visual crítico para evitar perda de telemetria.
+*   **Auto-Cura / Self-Healing de GPS (v3.9.0):** Inteligência que detecta se o sensor de GPS "travou" em uma coordenada fixa enquanto o veículo se move. O app agora reinicia o motor de localização automaticamente para recuperar o sinal sem intervenção humana.
 *   **Sincronização com GitHub:** Projeto vinculado ao repositório oficial para maior segurança e controle de versão.
 *   **Automação por Geofence (v3.3.0):** O app agora lê o nome das cercas geográficas. Se o nome contiver algo como `[PLANTIO]`, o sistema sugere automaticamente a troca para essa operação ao entrar na área.
 *   **Watchdog de Sensores (v3.4.0):** Implementado monitor de integridade do GPS. O app agora detecta se as coordenadas "congelaram" enquanto o veículo está em movimento e alerta o operador imediatamente.

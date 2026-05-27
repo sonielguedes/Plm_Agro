@@ -27,6 +27,7 @@ class TelemetryForegroundService : Service() {
     private val serviceScope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
     private lateinit var repository: PlmRepository
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var sensorWatchdog: com.soniel.plmagro.core.watchdog.SensorWatchdog
     private lateinit var fsm: MaquinaEstadoOperacional
     private lateinit var eventProcessor: EventProcessor
     private lateinit var watchdog: OperationalWatchdog
@@ -93,6 +94,7 @@ class TelemetryForegroundService : Service() {
         ResourceMonitor.incrementCollectors()
         
         repository = (application as PlmApplication).repository
+        sensorWatchdog = (application as PlmApplication).sensorWatchdog
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         fsm = MaquinaEstadoOperacional(repository)
         eventProcessor = EventProcessor(repository, fsm, (application as PlmApplication).diagnosticRepository)
@@ -109,6 +111,18 @@ class TelemetryForegroundService : Service() {
         observeJourney()
         watchdog.startMonitoring()
         startHeartbeat()
+        observeWatchdogCommands()
+    }
+
+    private fun observeWatchdogCommands() {
+        serviceScope.launch {
+            sensorWatchdog.commands.collect { cmd ->
+                if (cmd == "RESTART_GPS") {
+                    Log.w(TAG, "SELF-HEALING: Reiniciando provedor de localização por solicitação do Watchdog")
+                    requestLocationUpdates()
+                }
+            }
+        }
     }
 
     private fun startHeartbeat() {

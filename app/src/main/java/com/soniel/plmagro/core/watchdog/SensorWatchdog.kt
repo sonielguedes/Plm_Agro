@@ -24,6 +24,9 @@ class SensorWatchdog @Inject constructor() {
     private val _alerts = MutableSharedFlow<String>()
     val alerts = _alerts.asSharedFlow()
 
+    private val _commands = MutableSharedFlow<String>()
+    val commands = _commands.asSharedFlow()
+
     /**
      * Verifica se o GPS parou de enviar coordenadas diferentes enquanto o veículo deveria estar em movimento.
      */
@@ -33,8 +36,9 @@ class SensorWatchdog @Inject constructor() {
         if (speed > 5) { // Se estiver andando mais de 5km/h
             if (lat == lastLat && lng == lastLng) {
                 frozenCount++
-                if (frozenCount >= 10) { // 10 atualizações sem mudança de coordenada em movimento
-                    emitAlert("ALERTA: GPS pode estar CONGELADO. Verifique a posição do tablet.")
+                if (frozenCount >= 10) { // ~30-40 segundos de congelamento total
+                    emitAlert("ALERTA: GPS CONGELADO detectado. Reiniciando sensor automaticamente...")
+                    executeCommand("RESTART_GPS")
                     frozenCount = 0
                 }
             } else {
@@ -51,6 +55,13 @@ class SensorWatchdog @Inject constructor() {
         scope.launch {
             Log.e(TAG, "WATCHDOG_ALERT: $message")
             _alerts.emit(message)
+        }
+    }
+
+    private fun executeCommand(cmd: String) {
+        scope.launch {
+            Log.w(TAG, "WATCHDOG_COMMAND: $cmd")
+            _commands.emit(cmd)
         }
     }
 }
