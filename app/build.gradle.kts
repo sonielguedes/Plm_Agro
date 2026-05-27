@@ -14,8 +14,8 @@ android {
         applicationId = "com.soniel.plmagro"
         minSdk = 24
         targetSdk = 35
-        versionCode = 2
-        versionName = "1.1.0-industrial"
+        versionCode = 10
+        versionName = "4.0.0-RELEASE"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
