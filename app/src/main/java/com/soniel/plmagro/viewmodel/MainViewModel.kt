@@ -272,6 +272,7 @@ class MainViewModel @Inject constructor(
     }
 
     private var lastMovementTime = System.currentTimeMillis()
+    private var stoppedMovementCount = 0 // Contador para retomada automatica
     private val _showAutoStopAlert = MutableStateFlow(false)
     val showAutoStopAlert: StateFlow<Boolean> = _showAutoStopAlert
 
@@ -286,7 +287,25 @@ class MainViewModel @Inject constructor(
                         if (currentSpeed > 2) {
                             lastMovementTime = System.currentTimeMillis()
                             _showAutoStopAlert.value = false
+                            
+                            // Inteligência 10/10: Retomada automática se estiver em "PARADA"
+                            if (currentState.value == OperationalState.PARADO || currentState.value == OperationalState.PARADA_APONTADA) {
+                                if (currentSpeed > 10) {
+                                    stoppedMovementCount++
+                                    if (stoppedMovementCount >= 5) { // ~45-60 segundos de movimento constante
+                                        Log.i("INTEL", "AUTOMAÇÃO: Retomando operação por detecção de movimento (>10km/h)")
+                                        viewModelScope.launch {
+                                            repository.iniciarOperacao()
+                                            _uiMessage.emit("Movimento detectado: Retomando Operação!")
+                                            stoppedMovementCount = 0
+                                        }
+                                    }
+                                } else {
+                                    stoppedMovementCount = 0
+                                }
+                            }
                         } else {
+                            stoppedMovementCount = 0
                             checkAutoStopTimeout()
                         }
                         
