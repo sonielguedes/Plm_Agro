@@ -43,6 +43,7 @@ fun WialonDiagnosticScreen(
     val diagState by diagnosticViewModel.diagnosticState.collectAsState()
     val recentEvents by viewModel.recentSyncEvents.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
+    val healthState by viewModel.healthState.collectAsState()
     
     var showTokenEdit by remember { mutableStateOf(false) }
     var newToken by remember(token) { mutableStateOf(token ?: "") }
@@ -152,18 +153,24 @@ fun WialonDiagnosticScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("HARDWARE DO DISPOSITIVO", color = NeonGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text("SAÚDE DO HARDWARE (INDUSTRIAL)", color = NeonGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                         Spacer(modifier = Modifier.height(12.dp))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                            DiagnosticItem("BATERIA", "${diagState.batteryLevel}%")
-                            DiagnosticItem("TEMP", DashboardFormatters.formatTemperature(diagState.batteryTemp))
+                            DiagnosticItem("BATERIA", "${diagState.batteryLevel}% (${if(healthState.isCharging) "CARREGANDO" else "PILHA"})")
+                            DiagnosticItem("TEMP BATERIA", "${healthState.batteryTemp}°C")
+                            DiagnosticItem("MEMÓRIA", "${healthState.memoryUsageMb} MB")
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            DiagnosticItem("SOCKETS ATIVOS", "${healthState.activeSockets}")
+                            DiagnosticItem("ARMAZENAMENTO", storage.percent)
                             DiagnosticItem("SINAL", "${diagState.signalLevel}/4")
                         }
                         Spacer(modifier = Modifier.height(12.dp))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             DiagnosticItem("GPS HW", if (diagState.gpsHardwareActive) "ATIVO" else "INATIVO")
-                            DiagnosticItem("ARMAZENAMENTO", storage.percent)
-                            DiagnosticItem("DETALHE", storage.detail)
+                            DiagnosticItem("DISK", storage.detail)
+                            DiagnosticItem("COLETORES", "${healthState.activeCollectors}")
                         }
                     }
                 }

@@ -57,9 +57,10 @@ object AppModule {
     @Singleton
     fun provideWialonRepository(
         sessionManager: WialonSessionManager,
+        userPreferencesManager: UserPreferencesManager,
         diagnosticRepository: DiagnosticRepository
     ): WialonRepository {
-        return WialonRepository(sessionManager, diagnosticRepository)
+        return WialonRepository(sessionManager, userPreferencesManager, diagnosticRepository)
     }
 
     @Provides

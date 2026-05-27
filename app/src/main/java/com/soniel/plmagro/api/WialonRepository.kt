@@ -21,13 +21,13 @@ import javax.inject.Singleton
 @Singleton
 class WialonRepository @Inject constructor(
     private val sessionManager: WialonSessionManager,
+    private val userPreferencesManager: UserPreferencesManager,
     private val diagnosticRepository: DiagnosticRepository? = null
 ) {
     private val ipsClient = WialonIpsClient()
     private val gson = Gson()
     private val loginMutex = Mutex()
     private val globalSyncMutex = Mutex()
-    private var lastGeofenceSync = 0L
 
     private suspend fun getService(): WialonApiService {
         val baseUrl = sessionManager.baseUrlFlow.first()
@@ -298,9 +298,10 @@ class WialonRepository @Inject constructor(
     }
 
     suspend fun syncGeofences(): Result<List<GeofenceEntity>> = withContext(Dispatchers.IO) {
-        // Otimização Industrial: Evita sync redundante se feito nos últimos 60 minutos
-        if (System.currentTimeMillis() - lastGeofenceSync < 3600000 && lastGeofenceSync > 0) {
-            IndustrialLogger.d("WialonRepo", "Pulando sync de cercas (Cache recente)")
+        val lastSync = userPreferencesManager.lastGeofenceSync.first()
+        // Otimização Industrial: Evita sync redundante se feito nos últimos 60 minutos (Persistente)
+        if (System.currentTimeMillis() - lastSync < 3600000 && lastSync > 0) {
+            IndustrialLogger.d("WialonRepo", "Pulando sync de cercas (Cache persistente recente)")
             return@withContext Result.success(emptyList())
         }
 
@@ -332,7 +333,7 @@ class WialonRepository @Inject constructor(
                         IndustrialLogger.e("WialonRepo", "Erro ao processar cercas do recurso ${res.id}", e)
                     }
                 }
-                lastGeofenceSync = System.currentTimeMillis()
+                userPreferencesManager.updateGeofenceSyncTimestamp()
                 Result.success(all)
             },
             onFailure = { Result.failure(it) }
@@ -340,6 +341,13 @@ class WialonRepository @Inject constructor(
     }
 
     suspend fun syncOperators(): Result<List<Operator>> = withContext(Dispatchers.IO) {
+        val lastSync = userPreferencesManager.lastOperatorsSync.first()
+        // Otimização: Evita sync de motoristas nos últimos 30 minutos
+        if (System.currentTimeMillis() - lastSync < 1800000 && lastSync > 0) {
+            IndustrialLogger.d("WialonRepo", "Pulando sync de motoristas (Cache persistente)")
+            return@withContext Result.success(emptyList())
+        }
+
         // Aumentando flags para capturar motoristas de todos os recursos acessíveis
         val resParams = gson.toJson(mapOf(
             "spec" to mapOf("itemsType" to "avl_resource", "propName" to "sys_name", "propValueMask" to "*", "sortType" to "sys_name"),
@@ -370,6 +378,7 @@ class WialonRepository @Inject constructor(
                         IndustrialLogger.e("WialonRepo", "Erro ao processar motoristas do recurso ${res.id}", e)
                     }
                 }
+                userPreferencesManager.updateOperatorsSyncTimestamp()
                 Result.success(all)
             },
             onFailure = { Result.failure(it) }
