@@ -19,6 +19,8 @@ Este documento registra a jornada de evolução técnica e funcional que levou o
 *   **Proteção de Rede Antifragile:** Tratamento de erros e timeouts que eliminam fechamentos inesperados.
 
 ### ⚙️ Engenharia e Arquitetura
+*   **Módulo de Performance Operacional (v4.8.0):** Cálculo em tempo real de % de produtividade, tempo operando vs parado e velocidade média. Inclui alertas vocais do "Coach de Operação" para incentivar a produtividade no campo.
+*   **Relatórios Locais Avançados (PDF) (v4.7.0):** Implementação da geração de boletins operacionais em formato PDF diretamente no tablet, facilitando a conferência e o compartilhamento industrial sem dependência de nuvem.
 *   **Cercas de Velocidade Dinâmicas (v4.6.0):** Implementada lógica de limite de velocidade variável baseado na operação atual (Plantio, Colheita, etc) com alertas vocais integrados.
 *   **Predição de Manutenção (v4.5.0):** Módulo de monitoramento preditivo de horímetro com alertas vocais (TTS) e visuais para manutenção preventiva.
 *   **Modo Satelital Otimizado (v4.4.0):** Implementação de modo de baixo consumo de dados para antenas satelitais, com ajustes dinâmicos de GPS, Heartbeat e filtragem de telemetria.

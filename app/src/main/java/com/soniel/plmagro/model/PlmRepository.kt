@@ -47,6 +47,8 @@ class PlmRepository(
     suspend fun getRefuelingCount(journeyId: Long): Int = plmDao.getRefuelingCount(journeyId)
     suspend fun getVisitedGeofences(journeyId: Long): List<String> = plmDao.getVisitedGeofences(journeyId)
 
+    fun getTotalStopDuration(journeyId: Long): Flow<Long?> = plmDao.getTotalStopDuration(journeyId)
+
     suspend fun getOperator(matricula: String): Operator? {
         return plmDao.getOperator(matricula)
     }
@@ -199,6 +201,7 @@ class PlmRepository(
         // 1. Entidade Parada
         val parada = ParadaEntity(
             uuid = uuid,
+            jornadaId = journeyId,
             tipo = tipo,
             inicio = timestamp,
             operador = operador,

@@ -177,6 +177,12 @@ interface PlmDao {
     @Query("SELECT * FROM TabelaParadas ORDER BY inicio DESC")
     fun getAllParadas(): Flow<List<ParadaEntity>>
 
+    @Query("SELECT SUM(duracao) FROM TabelaParadas WHERE jornadaId = :jornadaId")
+    fun getTotalStopDuration(jornadaId: Long): Flow<Long?>
+
+    @Query("SELECT COUNT(*) FROM events WHERE journeyId = :jornadaId AND type = 'OPERACAO'")
+    fun getOperationEventsCount(jornadaId: Long): Flow<Int>
+
     @Query("SELECT * FROM TabelaParadas WHERE syncStatus = 'PENDENTE'")
     suspend fun getPendingParadas(): List<ParadaEntity>
 

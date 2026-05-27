@@ -36,7 +36,7 @@ class WialonSessionManager @Inject constructor(
     }
     val eidFlow: Flow<String?> = context.dataStore.data.map { it[EID_KEY] }
     val baseUrlFlow: Flow<String> = context.dataStore.data.map { it[BASE_URL_KEY] ?: "https://hst-api.wialon.com/" }
-    val ipsHostFlow: Flow<String> = context.dataStore.data.map { it[IPS_HOST_KEY] ?: "193.193.165.165" }
+    val ipsHostFlow: Flow<String> = context.dataStore.data.map { it[IPS_HOST_KEY] ?: "64.120.108.24" }
     val ipsPortFlow: Flow<Int> = context.dataStore.data.map { it[IPS_PORT_KEY] ?: 20332 }
     val linkedUidFlow: Flow<String?> = context.dataStore.data.map { it[LINKED_UID_KEY] }
     val linkedUnitNameFlow: Flow<String?> = context.dataStore.data.map { it[LINKED_UNIT_NAME_KEY] }

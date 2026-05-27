@@ -151,11 +151,16 @@ fun DashboardScreen(
                 }
             }
 
-            // Grid de Dados 2x2
+            // Grid de Dados 3x2 (Fase 4: Produtividade)
             Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     SimpleStatCard("VELOCIDADE", "$speed km/h", Modifier.weight(1f))
                     SimpleStatCard("KM ATUAL", kmAtual, Modifier.weight(1f))
+                }
+                Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    SimpleStatCard("PRODUTIVIDADE", "${diagState.produtividadePercent}%", Modifier.weight(1f), 
+                        valueColor = if(diagState.produtividadePercent > 80) NeonGreen else if(diagState.produtividadePercent > 50) Color.Yellow else DashboardDanger)
+                    SimpleStatCard("VELOC. MÉDIA", "${"%.1f".format(diagState.velocidadeMediaOperacao)} km/h", Modifier.weight(1f))
                 }
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     SimpleStatCard("KM RODADO", "$kmRodado KM", Modifier.weight(1f))
@@ -211,7 +216,7 @@ fun DashboardScreen(
 }
 
 @Composable
-private fun SimpleStatCard(label: String, value: String, modifier: Modifier = Modifier) {
+private fun SimpleStatCard(label: String, value: String, modifier: Modifier = Modifier, valueColor: Color = Color.White) {
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(containerColor = DashboardCard),
@@ -219,7 +224,7 @@ private fun SimpleStatCard(label: String, value: String, modifier: Modifier = Mo
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text(label, color = DashboardMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-            Text(value, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Black)
+            Text(value, color = valueColor, fontSize = 18.sp, fontWeight = FontWeight.Black)
         }
     }
 }

@@ -23,7 +23,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         ParadaEntity::class,
         OperationConfigEntity::class
     ],
-    version = 22,
+    version = 23,
     exportSchema = false
 )
 @TypeConverters(PlmConverters::class)
@@ -33,6 +33,12 @@ abstract class PlmDatabase : RoomDatabase() {
     companion object {
         @Volatile
         private var INSTANCE: PlmDatabase? = null
+
+        private val MIGRATION_22_23 = object : Migration(22, 23) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `TabelaParadas` ADD COLUMN `jornadaId` INTEGER NOT NULL DEFAULT 0")
+            }
+        }
 
         private val MIGRATION_21_22 = object : Migration(21, 22) {
             override fun migrate(db: SupportSQLiteDatabase) {
@@ -149,7 +155,7 @@ abstract class PlmDatabase : RoomDatabase() {
                     PlmDatabase::class.java,
                     "plm_agro_database"
                 )
-                .addMigrations(MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22)
+                .addMigrations(MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21, MIGRATION_21_22, MIGRATION_22_23)
                 .setJournalMode(JournalMode.WRITE_AHEAD_LOGGING)
                 .build()
                 INSTANCE = instance

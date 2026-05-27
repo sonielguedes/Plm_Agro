@@ -35,6 +35,7 @@ O projeto segue um rigoroso padrão de documentação para garantir a sustentabi
 - [**Arquitetura do Sistema**](./docs/ARQUITETURA.md): Visão geral das camadas, stack e fluxo de dados.
 - [**Estratégia Offline-First**](./docs/OFFLINE_FIRST.md): Como garantimos zero perda de dados.
 - [**Protocolo IPS 2.2**](./docs/IPS_PROTOCOL.md): Detalhes da implementação nativa via Socket TCP.
+- [**Configuração Wialon**](./docs/WIALON_SETUP.md): Guia passo a passo para novas unidades.
 - [**Máquina de Estado (FSM)**](./docs/FSM.md): Estados operacionais e gatilhos.
 
 ### 📈 Gestão e Evolução

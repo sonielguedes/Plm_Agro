@@ -102,18 +102,35 @@ fun EndJourneyScreen(
 
         if (summary != null) {
             Spacer(modifier = Modifier.height(12.dp))
-            OutlinedButton(
-                onClick = { 
-                    ShareUtils.shareJourneyReport(context, vehicleId, operatorName, kmAtual, summary) 
-                },
-                modifier = Modifier.fillMaxWidth().height(56.dp),
-                colors = ButtonDefaults.outlinedButtonColors(contentColor = NeonGreen),
-                border = androidx.compose.foundation.BorderStroke(1.dp, NeonGreen),
-                shape = RoundedCornerShape(8.dp)
-            ) {
-                Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
-                Spacer(Modifier.width(8.dp))
-                Text("ENVIAR BOLETIM (WHATSAPP)", fontWeight = FontWeight.Bold)
+            
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                OutlinedButton(
+                    onClick = { 
+                        ShareUtils.shareJourneyReport(context, vehicleId, operatorName, kmAtual, summary) 
+                    },
+                    modifier = Modifier.weight(1f).height(56.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = Color.White),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, Color.Gray),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("TEXTO", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                }
+
+                OutlinedButton(
+                    onClick = { 
+                        ShareUtils.generateAndSharePdf(context, vehicleId, operatorName, kmAtual, summary) 
+                    },
+                    modifier = Modifier.weight(1f).height(56.dp),
+                    colors = ButtonDefaults.outlinedButtonColors(contentColor = NeonGreen),
+                    border = androidx.compose.foundation.BorderStroke(1.dp, NeonGreen),
+                    shape = RoundedCornerShape(8.dp)
+                ) {
+                    Icon(Icons.Default.Share, contentDescription = null, modifier = Modifier.size(18.dp))
+                    Spacer(Modifier.width(8.dp))
+                    Text("BOLETIM PDF", fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                }
             }
         }
         

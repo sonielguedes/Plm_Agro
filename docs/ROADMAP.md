@@ -40,8 +40,20 @@ O objetivo é transformar o aplicativo de uma ferramenta de registro manual em u
     *   *Ação:* Cruzamento de horímetro e alertas de sensores para sugerir paradas preventivas.
 *   **Cercas de Velocidade Dinâmicas (CONCLUÍDO):**
     *   *Ação:* Ajuste automático do limite de velocidade baseado na operação atual (ex: Limite menor durante Plantio).
-*   **Relatórios Locais Avançados (PRÓXIMO PASSO):**
+*   **Relatórios Locais Avançados (CONCLUÍDO):**
     *   *Ação:* Geração de PDF de produtividade direto no tablet para conferência rápida.
+*   **Coach de Produtividade em Tempo Real (CONCLUÍDO):**
+    *   *Ação:* Cálculo de eficiência e alertas vocais proativos para o operador manter o ritmo de trabalho.
+
+---
+
+## 🚀 FASE 5: Expansão e Ecossistema (PRÓXIMO PASSO)
+*   **Modo Noturno Automático:**
+    *   *Ação:* Ajuste de brilho e contraste da UI baseado no horário local para reduzir fadiga.
+*   **Checklist de Segurança Digital:**
+    *   *Ação:* Validação de MDM e bloqueio de apps não autorizados durante a jornada.
+*   **Integração CAN BUS Avançada:**
+    *   *Ação:* Captura de dados de motor e consumo direto do veículo (J1939).
 
 ---
 

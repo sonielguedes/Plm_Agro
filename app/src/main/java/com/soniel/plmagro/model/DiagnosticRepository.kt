@@ -128,4 +128,13 @@ class DiagnosticRepository @Inject constructor(private val plmDao: PlmDao? = nul
             alertaManutencaoAtivo = alerta
         ) }
     }
+
+    fun updateProductivity(percent: Int, operando: Long, parado: Long, media: Float) {
+        _diagnosticState.update { it.copy(
+            produtividadePercent = percent,
+            tempoOperandoMin = operando,
+            tempoParadoMin = parado,
+            velocidadeMediaOperacao = media
+        ) }
+    }
 }

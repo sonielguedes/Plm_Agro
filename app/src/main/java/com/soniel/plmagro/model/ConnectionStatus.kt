@@ -52,5 +52,11 @@ data class DiagnosticState(
     val horimetroAtual: Double = 0.0,
     val proximaManutencao: Double = 0.0,
     val horasParaManutencao: Double = 0.0,
-    val alertaManutencaoAtivo: Boolean = false
+    val alertaManutencaoAtivo: Boolean = false,
+
+    // Inteligência de Produtividade (Fase 4)
+    val produtividadePercent: Int = 100,
+    val tempoOperandoMin: Long = 0,
+    val tempoParadoMin: Long = 0,
+    val velocidadeMediaOperacao: Float = 0f
 )

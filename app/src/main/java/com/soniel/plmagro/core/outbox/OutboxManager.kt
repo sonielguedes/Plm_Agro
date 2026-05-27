@@ -5,9 +5,9 @@ import com.soniel.plmagro.api.WialonRepository
 import com.soniel.plmagro.model.PlmDao
 import com.soniel.plmagro.model.OutboxEventEntity
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.collectLatest
 import javax.inject.Inject
 import javax.inject.Singleton
+import kotlin.math.pow
 
 @Singleton
 class OutboxManager @Inject constructor(
@@ -48,7 +48,7 @@ class OutboxManager @Inject constructor(
         val eligibleEvents = events.filter { event ->
             if (event.lastAttempt == null) return@filter true
             // Backoff: 5s, 10s, 20s, 40s, 80s... Máximo 5 minutos.
-            val backoffMillis = (Math.pow(2.0, event.retryCount.toDouble()) * 5000).toLong().coerceAtMost(300000)
+            val backoffMillis = (2.0.pow(event.retryCount.toDouble()) * 5000).toLong().coerceAtMost(300000)
             now >= (event.lastAttempt + backoffMillis)
         }
 

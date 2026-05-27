@@ -34,7 +34,7 @@ class WialonRepository @Inject constructor(
         return NetworkModule.getRetrofit(baseUrl).create(WialonApiService::class.java)
     }
 
-    private suspend fun getCentralService(): CentralApiService {
+    private fun getCentralService(): CentralApiService {
         return NetworkModule.getRetrofit(AppConfig.centralApiUrl).create(CentralApiService::class.java)
     }
 
@@ -154,7 +154,7 @@ class WialonRepository @Inject constructor(
 
     suspend fun syncOutboxEvent(event: OutboxEventEntity): Result<Unit> = withContext(Dispatchers.IO) {
         globalSyncMutex.withLock {
-            val payload = try { gson.fromJson(event.payloadJson, Map::class.java) } catch(e: Exception) { null }
+            val payload = try { gson.fromJson(event.payloadJson, Map::class.java) } catch(_: Exception) { null }
             val unitId = (payload?.get("wialonUnitId") as? Double)?.toLong() ?: 0L
             if (unitId == 0L) {
                 val error = "wialonUnitId ausente no payload do evento ${event.tipoEvento}"

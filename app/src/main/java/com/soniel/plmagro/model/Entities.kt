@@ -170,6 +170,7 @@ data class OperationConfigEntity(
 @Entity(tableName = "TabelaParadas")
 data class ParadaEntity(
     @PrimaryKey val uuid: String = java.util.UUID.randomUUID().toString(),
+    val jornadaId: Long = 0, // Vínculo com a jornada atual
     val tipo: String,
     val inicio: Long,
     val fim: Long? = null,

@@ -2,7 +2,7 @@ package com.soniel.plmagro.viewmodel
 
 import android.util.Log
 import java.util.Calendar
-import java.util.TimeZone
+import javax.inject.Inject
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.google.gson.Gson
@@ -18,7 +18,6 @@ import com.soniel.plmagro.service.SystemHealth as ServiceSystemHealth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.*
-import javax.inject.Inject
 
 enum class WialonConnectionStatus {
     ONLINE, SYNCING, OFFLINE
@@ -158,15 +157,10 @@ class MainViewModel @Inject constructor(
     val lastIpsAck = sessionManager.lastIpsAckFlow.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
     val diagnosticState = diagnosticRepository?.diagnosticState ?: MutableStateFlow(DiagnosticState())
 
-    val deviceUniqueId: String = android.os.Build.SERIAL.let {
-        if (it == android.os.Build.UNKNOWN || it.isEmpty()) {
-            // Fallback para Android ID se o Serial não estiver disponível
-            android.provider.Settings.Secure.getString(
-                com.soniel.plmagro.PlmApplication.instance.contentResolver,
-                android.provider.Settings.Secure.ANDROID_ID
-            )
-        } else it
-    }
+    val deviceUniqueId: String = android.provider.Settings.Secure.getString(
+        PlmApplication.instance.contentResolver,
+        android.provider.Settings.Secure.ANDROID_ID
+    ) ?: "UNKNOWN_DEVICE"
 
     private val _wialonUnits = MutableStateFlow<List<WialonUnit>>(emptyList())
     val wialonUnits: StateFlow<List<WialonUnit>> = _wialonUnits
@@ -210,6 +204,7 @@ class MainViewModel @Inject constructor(
         observeOperationalState()
         observeOperationalEvents()
         monitorSystemHealth()
+        observeProductivity()
         loadInitialData()
         startSyncIfEnabled()
         autoConnectWialon()
@@ -518,6 +513,62 @@ class MainViewModel @Inject constructor(
     }
 
     private var lastHeartbeatSent = 0L
+
+    private fun observeProductivity() {
+        viewModelScope.launch {
+            activeJourney.collectLatest { journey ->
+                if (journey == null) {
+                    diagnosticRepository?.updateProductivity(100, 0, 0, 0f)
+                    return@collectLatest
+                }
+
+                repository.getTotalStopDuration(journey.id).collectLatest { totalStopSeconds ->
+                    val startTime = journey.startTime
+                    val now = System.currentTimeMillis()
+                    val totalElapsedSeconds = (now - startTime) / 1000
+                    
+                    val stopSeconds = totalStopSeconds ?: 0L
+                    val operatingSeconds = (totalElapsedSeconds - stopSeconds).coerceAtLeast(0)
+                    
+                    val productivity = if (totalElapsedSeconds > 60) { // Esperar 1 minuto de jornada
+                        ((operatingSeconds.toDouble() / totalElapsedSeconds.toDouble()) * 100.0).toInt()
+                    } else 100
+
+                    // Velocidade média de operação (estimada m/s para km/h)
+                    val avgSpeed = if (operatingSeconds > 10) {
+                         (journey.accumulatedDistance / operatingSeconds.toDouble()) * 3.6
+                    } else 0.0
+
+                    diagnosticRepository?.updateProductivity(
+                        percent = productivity.coerceIn(0, 100),
+                        operando = operatingSeconds / 60,
+                        parado = stopSeconds / 60,
+                        media = avgSpeed.toFloat()
+                    )
+
+                    // Coach de Produtividade (Fase 4)
+                    checkProductivityAlerts(productivity)
+                }
+            }
+        }
+    }
+
+    private var lastProductivityAlertTime = 0L
+    private fun checkProductivityAlerts(percent: Int) {
+        val journey = activeJourney.value ?: return
+        val now = System.currentTimeMillis()
+        
+        // Só alerta após 15 min de jornada e se estiver operando
+        if (now - journey.startTime < 900000) return
+        if (currentState.value != OperationalState.OPERANDO) return
+
+        if (percent < 70 && now - lastProductivityAlertTime > 1200000) { // Cada 20 min
+            val msg = "Produtividade baixa: $percent%. Mantenha o foco na operação."
+            alertManager?.speak(msg)
+            lastProductivityAlertTime = now
+            viewModelScope.launch { _uiMessage.emit("📈 $msg") }
+        }
+    }
 
     private fun sendHeartbeat() {
         viewModelScope.launch {
