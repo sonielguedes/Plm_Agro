@@ -7,8 +7,13 @@ import android.os.Build
 import android.os.VibrationEffect
 import android.os.Vibrator
 import android.os.VibratorManager
+import android.speech.tts.TextToSpeech
+import java.util.Locale
 
-class AlertManager(private val context: Context) {
+class AlertManager(private val context: Context) : TextToSpeech.OnInitListener {
+    private var tts: TextToSpeech? = null
+    private var ttsReady = false
+
     private val vibrator: Vibrator = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
         val vibratorManager = context.getSystemService(Context.VIBRATOR_MANAGER_SERVICE) as VibratorManager
         vibratorManager.defaultVibrator
@@ -18,6 +23,25 @@ class AlertManager(private val context: Context) {
     }
 
     private val toneGenerator = ToneGenerator(AudioManager.STREAM_NOTIFICATION, 100)
+
+    init {
+        tts = TextToSpeech(context, this)
+    }
+
+    override fun onInit(status: Int) {
+        if (status == TextToSpeech.SUCCESS) {
+            val result = tts?.setLanguage(Locale("pt", "BR"))
+            if (result != TextToSpeech.LANG_MISSING_DATA && result != TextToSpeech.LANG_NOT_SUPPORTED) {
+                ttsReady = true
+            }
+        }
+    }
+
+    fun speak(text: String) {
+        if (ttsReady) {
+            tts?.speak(text, TextToSpeech.QUEUE_FLUSH, null, null)
+        }
+    }
 
     fun playSpeedAlert() {
         // Alerta sonoro

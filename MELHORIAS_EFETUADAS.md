@@ -19,6 +19,7 @@ Este documento registra a jornada de evolução técnica e funcional que levou o
 *   **Proteção de Rede Antifragile:** Tratamento de erros e timeouts que eliminam fechamentos inesperados.
 
 ### ⚙️ Engenharia e Arquitetura
+*   **Assistente de Voz (v4.2.0):** Integração com Text-to-Speech (TTS). O aplicativo agora fala frases de alerta para informar o motivo da parada e avisar sobre movimento sem jornada ativa.
 *   **Feedback Sonoro e Háptico (v4.1.0):** Bipes e vibração integrados aos alertas de GPS e Paradas Automáticas.
 *   **Dagger-Hilt:** Arquitetura profissional com Injeção de Dependência.
 *   **Sincronização Delta:** Economia drástica de dados (M2M) através de cache persistente inteligente.

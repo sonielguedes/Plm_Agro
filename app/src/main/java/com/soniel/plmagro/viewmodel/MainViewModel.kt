@@ -292,6 +292,7 @@ class MainViewModel @Inject constructor(
                             // Inteligência 10/10: Alerta de Jornada Esquecida
                             if (activeJourney.value == null && currentSpeed > 15) {
                                 viewModelScope.launch {
+                                    alertManager?.speak("Atenção, movimento detectado. Por favor, inicie sua jornada.")
                                     _uiMessage.emit("⚠️ MOVIMENTO DETECTADO! Por favor, inicie sua jornada.")
                                 }
                             }
@@ -344,6 +345,7 @@ class MainViewModel @Inject constructor(
                 Log.w("INTEL", "DETECCAO_AUTOMATICA: Veiculo parado ha ${autoStopTimeoutMinutes.value} min sem apontamento")
                 _showAutoStopAlert.value = true
                 alertManager?.playOperationalNotice()
+                alertManager?.speak("Atenção, veículo parado. Por favor, informe o motivo da parada.")
                 viewModelScope.launch { _uiMessage.emit("Atenção: Máquina parada. Registre o motivo da parada!") }
             }
         }
