@@ -46,5 +46,11 @@ data class DiagnosticState(
     val totalDiskMb: Long = 0,
     val signalLevel: Int = 0,
     val lastHeartbeatTime: Long = 0,
-    val gpsHardwareActive: Boolean = false
+    val gpsHardwareActive: Boolean = false,
+    
+    // Predição de Manutenção (Fase 4)
+    val horimetroAtual: Double = 0.0,
+    val proximaManutencao: Double = 0.0,
+    val horasParaManutencao: Double = 0.0,
+    val alertaManutencaoAtivo: Boolean = false
 )

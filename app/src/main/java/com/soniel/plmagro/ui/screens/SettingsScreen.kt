@@ -76,6 +76,9 @@ fun SettingsScreen(
     var ipsPort by remember(savedIpsPort) { mutableStateOf(savedIpsPort.toString()) }
     var autoStopMinutes by remember(autoStopTimeout) { mutableStateOf(autoStopTimeout.toString()) }
     
+    var maintenanceTarget by remember(config) { mutableStateOf(config?.horimetroManutencao?.toString() ?: "0.0") }
+    var maintenanceAlertThreshold by remember(config) { mutableStateOf(config?.alertaManutencaoHoras?.toString() ?: "50.0") }
+    
     var adminPassword by remember { mutableStateOf("") }
     val scrollState = rememberScrollState()
 
@@ -338,6 +341,31 @@ fun SettingsScreen(
 
                     Spacer(modifier = Modifier.height(16.dp))
 
+                    SectionHeader("PREDIÇÃO DE MANUTENÇÃO")
+                    PlmCard {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                PlmTextField(
+                                    value = maintenanceTarget,
+                                    onValueChange = { maintenanceTarget = it },
+                                    label = "Próxima Manut. (Horas)",
+                                    modifier = Modifier.weight(1f),
+                                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
+                                )
+                                PlmTextField(
+                                    value = maintenanceAlertThreshold,
+                                    onValueChange = { maintenanceAlertThreshold = it },
+                                    label = "Alerta Antecipado (h)",
+                                    modifier = Modifier.weight(1f),
+                                    keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
+                                )
+                            }
+                            Text("Horímetro atual: ${"%.1f".format(activeJourney?.lastHorimetro ?: 0.0)}h", fontSize = 11.sp, color = NeonGreen, modifier = Modifier.padding(top = 8.dp))
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
                     SectionHeader("DIAGNÓSTICO AVANÇADO")
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                         DiagnosticSmallButton(
@@ -367,6 +395,10 @@ fun SettingsScreen(
                                 unitName = linkedUnitName ?: ""
                             )
                             viewModel.saveAutoStopTimeout(autoStopMinutes.toIntOrNull() ?: 5)
+                            viewModel.saveMaintenanceConfig(
+                                target = maintenanceTarget.toDoubleOrNull() ?: 0.0,
+                                alertAt = maintenanceAlertThreshold.toDoubleOrNull() ?: 50.0
+                            )
                             onBack()
                         },
                         enabled = fleetCode.isNotEmpty() && plate.isNotEmpty()

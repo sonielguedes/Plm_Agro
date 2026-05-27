@@ -22,7 +22,7 @@ import androidx.sqlite.db.SupportSQLiteDatabase
         GeofenceEntity::class,
         ParadaEntity::class
     ],
-    version = 20,
+    version = 21,
     exportSchema = false
 )
 @TypeConverters(PlmConverters::class)
@@ -32,6 +32,13 @@ abstract class PlmDatabase : RoomDatabase() {
     companion object {
         @Volatile
         private var INSTANCE: PlmDatabase? = null
+
+        private val MIGRATION_20_21 = object : Migration(20, 21) {
+            override fun migrate(db: SupportSQLiteDatabase) {
+                db.execSQL("ALTER TABLE `vehicle_config` ADD COLUMN `horimetroManutencao` REAL NOT NULL DEFAULT 0.0")
+                db.execSQL("ALTER TABLE `vehicle_config` ADD COLUMN `alertaManutencaoHoras` REAL NOT NULL DEFAULT 50.0")
+            }
+        }
 
         private val MIGRATION_18_19 = object : Migration(18, 19) {
             override fun migrate(db: SupportSQLiteDatabase) {
@@ -135,7 +142,7 @@ abstract class PlmDatabase : RoomDatabase() {
                     PlmDatabase::class.java,
                     "plm_agro_database"
                 )
-                .addMigrations(MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20)
+                .addMigrations(MIGRATION_9_10, MIGRATION_10_11, MIGRATION_11_12, MIGRATION_12_13, MIGRATION_13_14, MIGRATION_14_15, MIGRATION_15_16, MIGRATION_16_17, MIGRATION_17_18, MIGRATION_18_19, MIGRATION_19_20, MIGRATION_20_21)
                 .setJournalMode(JournalMode.WRITE_AHEAD_LOGGING)
                 .build()
                 INSTANCE = instance

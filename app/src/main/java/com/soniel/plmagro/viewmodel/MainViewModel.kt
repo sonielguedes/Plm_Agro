@@ -469,6 +469,9 @@ class MainViewModel @Inject constructor(
                 val hour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY)
                 _isNightMode.value = hour >= 18 || hour < 6
 
+                // Monitoramento Preditivo de Manutenção (Fase 4)
+                checkMaintenanceAlerts()
+
                 // Monitoramento real de saúde do sistema
                 _systemHealth.value = SystemHealth(
                     gps = if (repository.isGpsEnabled()) SystemStatus.ONLINE else SystemStatus.OFFLINE,
@@ -517,6 +520,58 @@ class MainViewModel @Inject constructor(
         }
     }
 
+
+    private var lastMaintenanceAlertTime = 0L
+
+    private fun checkMaintenanceAlerts() {
+        val config = vehicleConfig.value ?: return
+        val journey = activeJourney.value
+        val horimetroAtual = journey?.lastHorimetro ?: 0.0
+        val target = config.horimetroManutencao
+        val alertThreshold = config.alertaManutencaoHoras
+
+        if (target > 0) {
+            val hoursLeft = target - horimetroAtual
+            val isAlertActive = hoursLeft <= alertThreshold
+            
+            diagnosticRepository?.updateMaintenanceStats(
+                atual = horimetroAtual,
+                proxima = target,
+                alerta = isAlertActive
+            )
+
+            if (isAlertActive && hoursLeft > 0) {
+                val now = System.currentTimeMillis()
+                // Alerta vocal a cada 30 minutos se estiver próximo
+                if (now - lastMaintenanceAlertTime > 1800000) {
+                    val msg = "Atenção: Manutenção preventiva em ${hoursLeft.toInt()} horas."
+                    alertManager?.speak(msg)
+                    lastMaintenanceAlertTime = now
+                    viewModelScope.launch { _uiMessage.emit("⚠️ $msg") }
+                }
+            } else if (hoursLeft <= 0 && target > 0) {
+                val now = System.currentTimeMillis()
+                if (now - lastMaintenanceAlertTime > 600000) { // A cada 10 min se venceu
+                    val msg = "URGENTE: Manutenção Vencida há ${Math.abs(hoursLeft).toInt()} horas!"
+                    alertManager?.speak(msg)
+                    lastMaintenanceAlertTime = now
+                    viewModelScope.launch { _uiMessage.emit("🚨 $msg") }
+                }
+            }
+        }
+    }
+
+    fun saveMaintenanceConfig(target: Double, alertAt: Double) {
+        viewModelScope.launch {
+            val current = vehicleConfig.value ?: return@launch
+            val updated = current.copy(
+                horimetroManutencao = target,
+                alertaManutencaoHoras = alertAt
+            )
+            repository.saveVehicleConfig(updated)
+            _uiMessage.emit("Configuração de Manutenção salva.")
+        }
+    }
 
     fun closeAutoStopPopup() {
         _showAutoStopPopup.value = false

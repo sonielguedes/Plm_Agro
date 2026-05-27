@@ -77,6 +77,7 @@ fun DashboardScreen(
     val activeVinculo by viewModel.activeVinculo.collectAsStateWithLifecycle()
     val activeJourney by viewModel.activeJourney.collectAsStateWithLifecycle()
     val fsmState by viewModel.currentState.collectAsStateWithLifecycle()
+    val diagState by viewModel.diagnosticState.collectAsStateWithLifecycle()
 
     val hasIpsLink = !activeVinculo?.wialonUniqueId.isNullOrBlank()
     val ipsStatus = if (hasIpsLink) ipsStatusRaw else WialonConnectionStatus.OFFLINE
@@ -130,9 +131,19 @@ fun DashboardScreen(
                 shape = RoundedCornerShape(8.dp)
             ) {
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text(if (activeVinculo == null) "NÃO VINCULADO" else "VINCULADO: ${activeVinculo?.wialonNome}", 
-                        color = if (activeVinculo == null) DashboardDanger else NeonGreen, 
-                        fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                    Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                        Text(if (activeVinculo == null) "NÃO VINCULADO" else "VINCULADO: ${activeVinculo?.wialonNome}", 
+                            color = if (activeVinculo == null) DashboardDanger else NeonGreen, 
+                            fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        
+                        if (diagState.alertaManutencaoAtivo) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(Icons.Default.Build, null, tint = Color.Yellow, modifier = Modifier.size(14.dp))
+                                Spacer(Modifier.width(4.dp))
+                                Text("REVISÃO: ${diagState.horasParaManutencao.toInt()}h", color = Color.Yellow, fontSize = 11.sp, fontWeight = FontWeight.Bold)
+                            }
+                        }
+                    }
                     Text(vehicleId, color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Black)
                     Text("Placa: $vehiclePlate", color = Color.Gray, fontSize = 14.sp)
                     Spacer(Modifier.height(8.dp))

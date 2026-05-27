@@ -27,7 +27,9 @@ data class VehicleConfig(
     val type: String,
     val wialonUnitId: Long? = null,
     val wialonUnitName: String? = null,
-    val wialonUniqueId: String? = null // IMEI ou ID Único para Wialon IPS
+    val wialonUniqueId: String? = null, // IMEI ou ID Único para Wialon IPS
+    val horimetroManutencao: Double = 0.0, // Horas da próxima manutenção
+    val alertaManutencaoHoras: Double = 50.0 // Alerta antecipado (ex: 50h antes)
 )
 
 @Entity(tableName = "operators")

@@ -119,4 +119,13 @@ class DiagnosticRepository @Inject constructor(private val plmDao: PlmDao? = nul
     fun updateWebStatus(status: ConnectionStatus, latency: Long = 0, error: String? = null) {
         _diagnosticState.update { it.copy(web = TechnicalStatus(status, System.currentTimeMillis(), latency, error)) }
     }
+
+    fun updateMaintenanceStats(atual: Double, proxima: Double, alerta: Boolean) {
+        _diagnosticState.update { it.copy(
+            horimetroAtual = atual,
+            proximaManutencao = proxima,
+            horasParaManutencao = (proxima - atual).coerceAtLeast(0.0),
+            alertaManutencaoAtivo = alerta
+        ) }
+    }
 }

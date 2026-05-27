@@ -19,6 +19,7 @@ Este documento registra a jornada de evolução técnica e funcional que levou o
 *   **Proteção de Rede Antifragile:** Tratamento de erros e timeouts que eliminam fechamentos inesperados.
 
 ### ⚙️ Engenharia e Arquitetura
+*   **Predição de Manutenção (v4.5.0):** Módulo de monitoramento preditivo de horímetro com alertas vocais (TTS) e visuais para manutenção preventiva.
 *   **Modo Satelital Otimizado (v4.4.0):** Implementação de modo de baixo consumo de dados para antenas satelitais, com ajustes dinâmicos de GPS, Heartbeat e filtragem de telemetria.
 *   **Dashboard de Saúde Técnica:** Refatoração completa da tela de diagnóstico para incluir status de MQTT, CAN, Central Web e métricas detalhadas de hardware.
 *   **Conformidade Wialon IPS 2.2 (v4.3.0):** Implementação 100% fiel ao protocolo via Socket TCP bruto, incluindo handshake #L# e tratamento rigoroso de ACKs (#AD#1, #AD#0, #AD#-1).
