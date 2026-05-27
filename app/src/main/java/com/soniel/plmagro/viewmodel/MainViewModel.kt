@@ -53,6 +53,7 @@ class MainViewModel @Inject constructor(
     private val wialonRepository: WialonRepository,
     private val sessionManager: WialonSessionManager,
     private val userPreferencesManager: UserPreferencesManager,
+    private val sensorWatchdog: com.soniel.plmagro.core.watchdog.SensorWatchdog,
     private val diagnosticRepository: DiagnosticRepository? = null,
     private val outboxManager: OutboxManager? = null,
     private val alertManager: AlertManager? = null
@@ -208,6 +209,12 @@ class MainViewModel @Inject constructor(
         startSyncIfEnabled()
         autoConnectWialon()
         recoverActiveJourney()
+        
+        viewModelScope.launch {
+            sensorWatchdog.alerts.collect { message ->
+                _uiMessage.emit(message)
+            }
+        }
     }
 
     private fun setupDefaultOperators() {
@@ -289,6 +296,7 @@ class MainViewModel @Inject constructor(
                         _currentLocation.value = Pair(event.lat, event.lng)
                         _satelliteCount.value = event.satellites
                         _gpsAccuracy.value = event.accuracy
+                        sensorWatchdog.checkGpsIntegrity(event.lat, event.lng, _speed.value)
                         checkGeofences(event.lat, event.lng)
                     }
                     else -> {}

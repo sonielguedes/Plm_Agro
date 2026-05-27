@@ -14,6 +14,8 @@ Este documento registra as evoluções técnicas e funcionais implementadas para
 *   **Tempo de Parada Configurável (v3.2.1):** Adicionada opção nas configurações administrativas para definir quantos minutos de inatividade disparam o alerta (Ex: 2 min, 5 min, 10 min).
 *   **Sincronização com GitHub:** Projeto vinculado ao repositório oficial para maior segurança e controle de versão.
 *   **Automação por Geofence (v3.3.0):** O app agora lê o nome das cercas geográficas. Se o nome contiver algo como `[PLANTIO]`, o sistema sugere automaticamente a troca para essa operação ao entrar na área.
+*   **Watchdog de Sensores (v3.4.0):** Implementado monitor de integridade do GPS. O app agora detecta se as coordenadas "congelaram" enquanto o veículo está em movimento e alerta o operador imediatamente.
+*   **Monitoramento Térmico Ativo:** Integração com sensores de hardware para prevenir danos ao tablet por calor excessivo.
 
 ---
 
