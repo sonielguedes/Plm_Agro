@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- Wialon IPS Gateway sometimes uses IP address directly, which might be needed for Socket logic -->
+        <!-- But for Remote API, we enforce HTTPS -->
+        <domain includeSubdomains="true">hst-api.wialon.com</domain>
+        <domain includeSubdomains="true">plmagro.com.br</domain>
+    </domain-config>
+</network-security-config>
