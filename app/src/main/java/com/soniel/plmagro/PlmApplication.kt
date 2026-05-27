@@ -31,6 +31,7 @@ class PlmApplication : Application() {
     @Inject lateinit var userPreferencesManager: UserPreferencesManager
     @Inject lateinit var diagnosticRepository: DiagnosticRepository
     @Inject lateinit var outboxManager: OutboxManager
+    @Inject lateinit var sensorWatchdog: com.soniel.plmagro.core.watchdog.SensorWatchdog
 
     override fun onCreate() {
         super.onCreate()

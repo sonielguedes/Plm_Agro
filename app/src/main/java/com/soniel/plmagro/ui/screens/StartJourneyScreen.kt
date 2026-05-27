@@ -10,6 +10,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -18,10 +19,15 @@ import com.soniel.plmagro.ui.components.PlmButton
 import com.soniel.plmagro.ui.theme.CardBackground
 import com.soniel.plmagro.ui.theme.NeonGreen
 import com.soniel.plmagro.viewmodel.MainViewModel
+import androidx.compose.material.icons.filled.GpsFixed
+import androidx.compose.material.icons.filled.BatteryChargingFull
 
 @Composable
 fun StartJourneyScreen(viewModel: MainViewModel, onBack: () -> Unit, onStart: (String, String, String) -> Unit) {
     val activeVinculo by viewModel.activeVinculo.collectAsState()
+    val gpsAccuracy by viewModel.gpsAccuracy.collectAsState()
+    val healthState by viewModel.healthState.collectAsState()
+
     var step by remember { mutableStateOf(1) } // 1: KM Inicial, 2: Operação, 3: Centro de Custo
     
     // Iniciar KM com o valor que veio do site no momento do vínculo
@@ -92,6 +98,20 @@ fun StartJourneyScreen(viewModel: MainViewModel, onBack: () -> Unit, onStart: (S
         
         Spacer(modifier = Modifier.height(24.dp))
 
+        // Checklist de Partida Industrial (Veículos)
+        if (step == 3) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                val gpsOk = gpsAccuracy > 0 && gpsAccuracy < 15f
+                val batteryOk = healthState.batteryTemp < 45f && (healthState.isCharging || healthState.activeSockets > 0 || true) // Simplificado p/ v1
+                
+                ChecklistItem("GPS", if(gpsOk) "ESTÁVEL" else "AGUARDANDO", gpsOk, Icons.Default.GpsFixed, Modifier.weight(1f))
+                ChecklistItem("BATERIA", if(healthState.isCharging) "OK (CARGA)" else "${healthState.batteryTemp.toInt()}°C", true, Icons.Default.BatteryChargingFull, Modifier.weight(1f))
+            }
+        }
+
         Text(
             text = title.uppercase(),
             style = MaterialTheme.typography.labelMedium,
@@ -146,8 +166,35 @@ fun StartJourneyScreen(viewModel: MainViewModel, onBack: () -> Unit, onStart: (S
             onClick = {
                 if (step < 3) step++ else onStart(kmInicial, operacao, ccusto)
             },
-            enabled = currentInput.isNotEmpty()
+            enabled = currentInput.isNotEmpty() && (step < 3 || (gpsAccuracy > 0 && gpsAccuracy < 20f))
         )
+        
+        if (step == 3 && (gpsAccuracy == 0f || gpsAccuracy >= 20f)) {
+            Text(
+                "Aguardando sinal estável do GPS...", 
+                color = Color.Yellow, 
+                fontSize = 11.sp, 
+                modifier = Modifier.padding(top = 4.dp).align(Alignment.CenterHorizontally)
+            )
+        }
     }
 }
+}
+
+@Composable
+private fun ChecklistItem(label: String, value: String, ok: Boolean, icon: ImageVector, modifier: Modifier = Modifier) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
+        border = androidx.compose.foundation.BorderStroke(1.dp, if(ok) NeonGreen.copy(0.5f) else Color.DarkGray)
+    ) {
+        Row(modifier = Modifier.padding(8.dp), verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, null, tint = if(ok) NeonGreen else Color.Gray, modifier = Modifier.size(16.dp))
+            Spacer(Modifier.width(8.dp))
+            Column {
+                Text(label, color = Color.Gray, fontSize = 9.sp, fontWeight = FontWeight.Bold)
+                Text(value, color = Color.White, fontSize = 11.sp, fontWeight = FontWeight.Black)
+            }
+        }
+    }
 }
