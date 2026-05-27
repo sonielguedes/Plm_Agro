@@ -336,21 +336,28 @@ class MainViewModel @Inject constructor(
                     if (active != null) {
                         Log.i("GEO", "Entrou na cerca: ${active.name}")
                         _uiMessage.emit("Entrou em: ${active.name}")
-                        alertManager?.playGeofenceEntry()
                         
-                        // Automação: Identificar operação pelo nome entre colchetes [OP]
+                        // Inteligência 10/10: Automação por Nome da Cerca
+                        // Padrão esperado: "[CODIGO_OP] Nome da Area"
                         val regex = Regex("\\[(.*?)\\]")
                         val match = regex.find(active.name)
-                        val suggestedOp = match?.groupValues?.get(1) ?: "OP_GEO"
+                        val autoOpCode = match?.groupValues?.get(1)
                         
-                        repository.registerEvent(
-                            journeyId = journey.id,
-                            type = "ENTROU_NA_CERCA",
-                            description = "Área: ${active.name} | Operação: $suggestedOp",
-                            km = journey.lastKm,
-                            lat = lat,
-                            lng = lng
-                        )
+                        if (autoOpCode != null && journey.operationCode != autoOpCode) {
+                            Log.i("INTEL", "AUTOMAÇÃO: Sugerindo troca de operação para $autoOpCode baseado na Geofence")
+                            _uiMessage.emit("Local detectado: Sugerindo Operação $autoOpCode")
+                            
+                            repository.registerEvent(
+                                journeyId = journey.id,
+                                type = "SUGESTAO_OPERACAO",
+                                description = "Detectada entrada em ${active.name}. Operação sugerida: $autoOpCode",
+                                km = journey.lastKm,
+                                lat = lat,
+                                lng = lng
+                            )
+                        }
+
+                        // alertManager?.playGeofenceEntry()
                     } else if (oldName != null) {
                         Log.i("GEO", "Saiu da cerca: $oldName")
                         _uiMessage.emit("Saiu de: $oldName")
