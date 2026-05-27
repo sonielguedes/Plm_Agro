@@ -288,6 +288,13 @@ class MainViewModel @Inject constructor(
                             lastMovementTime = System.currentTimeMillis()
                             _showAutoStopAlert.value = false
                             
+                            // Inteligência 10/10: Alerta de Jornada Esquecida
+                            if (activeJourney.value == null && currentSpeed > 15) {
+                                viewModelScope.launch {
+                                    _uiMessage.emit("⚠️ MOVIMENTO DETECTADO! Por favor, inicie sua jornada.")
+                                }
+                            }
+                            
                             // Inteligência 10/10: Retomada automática se estiver em "PARADA"
                             if (currentState.value == OperationalState.PARADO || currentState.value == OperationalState.PARADA_APONTADA) {
                                 if (currentSpeed > 10) {

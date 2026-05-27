@@ -15,6 +15,7 @@ Este documento registra as evoluções técnicas e funcionais implementadas para
 *   **Sincronização Delta e Eficiência (v3.5.0):** Implementado cache persistente para cercas e motoristas. O app agora lembra a última sincronização mesmo após reiniciar, economizando até 90% de dados em áreas de sinal instável.
 *   **Checklist de Partida (v3.6.0):** Implementada validação de sinal GPS e Bateria antes de iniciar a jornada. Garante que veículos leves/pesados comecem o trajeto com o hodômetro digital calibrado e sinal estável.
 *   **Retomada Automática (v3.7.0):** Inteligência de campo que detecta se o motorista saiu dirigindo sem encerrar uma parada. O app agora volta para "OPERANDO" automaticamente se detectar velocidade > 10 km/h por tempo prolongado.
+*   **Alerta de Jornada Esquecida (v3.8.0):** Se o veículo entrar em movimento (>15km/h) sem que um operador tenha iniciado a jornada, o app emite um alerta visual crítico para evitar perda de telemetria.
 *   **Sincronização com GitHub:** Projeto vinculado ao repositório oficial para maior segurança e controle de versão.
 *   **Automação por Geofence (v3.3.0):** O app agora lê o nome das cercas geográficas. Se o nome contiver algo como `[PLANTIO]`, o sistema sugere automaticamente a troca para essa operação ao entrar na área.
 *   **Watchdog de Sensores (v3.4.0):** Implementado monitor de integridade do GPS. O app agora detecta se as coordenadas "congelaram" enquanto o veículo está em movimento e alerta o operador imediatamente.
