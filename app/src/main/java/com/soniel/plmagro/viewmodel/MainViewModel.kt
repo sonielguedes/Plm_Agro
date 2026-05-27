@@ -77,6 +77,10 @@ class MainViewModel @Inject constructor(
         viewModelScope, SharingStarted.WhileSubscribed(5000), 5
     )
 
+    val satelliteMode = userPreferencesManager.satelliteMode.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), false
+    )
+
     val vehicleConfig = repository.vehicleConfig.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), null
     )
@@ -354,6 +358,13 @@ class MainViewModel @Inject constructor(
     fun saveAutoStopTimeout(minutes: Int) {
         viewModelScope.launch {
             userPreferencesManager.setAutoStopTimeout(minutes)
+        }
+    }
+
+    fun setSatelliteMode(enabled: Boolean) {
+        viewModelScope.launch {
+            userPreferencesManager.setSatelliteMode(enabled)
+            _uiMessage.emit("Modo Satelital ${if(enabled) "Ativado" else "Desativado"}")
         }
     }
 

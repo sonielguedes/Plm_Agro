@@ -3,17 +3,20 @@ package com.soniel.plmagro.api
 import java.text.SimpleDateFormat
 import java.util.*
 
+/**
+ * WialonIpsProtocol - Implementação do protocolo Wialon IPS v2.2
+ * Documentação: https://sdk.wialon.com/wiki/en/sidebar/remoteapi/protocols/wialonips
+ */
 object WialonIpsProtocol {
     private val dateFormatter = SimpleDateFormat("ddMMyy;HHmmss", Locale.getDefault()).apply {
         timeZone = TimeZone.getTimeZone("UTC")
     }
 
     /**
-     * Formata uma mensagem no padrão Wialon IPS (Data Package - #D#)
-     * Formato: #D#date;time;lat1;lat2;lon1;lon2;speed;course;height;sats
+     * Formata uma mensagem no padrão Wialon IPS v2.2 (Data Package - #D#)
+     * Formato: #D#date;time;lat1;lat2;lon1;lon2;speed;course;height;sats;hdop;inputs;outputs;adc;ibutton;params\r\n
      */
     fun formatDataPackage(
-        imei: String,
         timestamp: Long,
         lat: Double,
         lng: Double,
@@ -21,37 +24,50 @@ object WialonIpsProtocol {
         course: Float,
         altitude: Double,
         satellites: Int,
-        extraParams: Map<String, Any>? = null
+        extraParams: Map<String, Any>? = null,
+        hdop: Double = 1.0,
+        inputs: Int? = null,
+        outputs: Int? = null,
+        adc: List<Double>? = null,
+        ibutton: String? = null
     ): String {
         val dateStr = dateFormatter.format(Date(timestamp))
         
-        // Conversão de coordenadas para o formato Wialon (DDMM.MMMM;N/S)
+        // Conversão de coordenadas para o formato Wialon (DDMM.MMMM;N/S e DDDMM.MMMM;E/W)
         val latFormatted = formatCoordinate(lat, true)
         val lngFormatted = formatCoordinate(lng, false)
         
-        val baseMsg = "#D#$dateStr;$latFormatted;$lngFormatted;${speed.toInt()};${course.toInt()};${altitude.toInt()};$satellites"
+        val speedInt = speed.toInt()
+        val courseInt = course.toInt()
+        val altInt = altitude.toInt()
         
-        // Adiciona parâmetros extras no final se existirem (Padrão Wialon IPS)
+        val hdopStr = if (hdop == 0.0) "" else "%.1f".format(Locale.US, hdop)
+        val inputsStr = inputs?.toString() ?: ""
+        val outputsStr = outputs?.toString() ?: ""
+        val adcStr = adc?.joinToString(",") { "%.2f".format(Locale.US, it) } ?: ""
+        val ibuttonStr = ibutton ?: ""
+
+        val baseMsg = "#D#$dateStr;$latFormatted;$lngFormatted;$speedInt;$courseInt;$altInt;$satellites;$hdopStr;$inputsStr;$outputsStr;$adcStr;$ibuttonStr"
+        
+        // Adiciona parâmetros extras no final se existirem
         val paramsStr = extraParams?.entries?.joinToString(",") { (k, v) ->
             when (v) {
-                is Int -> "$k:1:$v"
-                is Long -> "$k:1:$v"
-                is Double -> "$k:2:$v"
-                is Float -> "$k:2:$v"
+                is Int, is Long -> "$k:1:$v"
+                is Double, is Float -> "$k:2:%.2f".format(Locale.US, (v as Number).toDouble())
                 is Boolean -> "$k:1:${if (v) 1 else 0}"
                 else -> "$k:3:$v" // 3 = String
             }
         }
         
-        return if (paramsStr.isNullOrBlank()) "$baseMsg\r\n" else "$baseMsg;$paramsStr\r\n"
+        return if (paramsStr.isNullOrBlank()) "$baseMsg;\r\n" else "$baseMsg;$paramsStr\r\n"
     }
 
     /**
      * Formata o pacote de login
-     * Formato: #L#imei;password
+     * Formato: #L#unique_id;password\r\n
      */
-    fun formatLoginPackage(imei: String): String {
-        return "#L#$imei;NA\r\n"
+    fun formatLoginPackage(uniqueId: String, password: String = "NA"): String {
+        return "#L#$uniqueId;$password\r\n"
     }
 
     private fun formatCoordinate(coord: Double, isLat: Boolean): String {

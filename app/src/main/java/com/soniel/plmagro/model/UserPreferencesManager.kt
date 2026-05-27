@@ -24,6 +24,7 @@ class UserPreferencesManager @Inject constructor(
         private val AUTO_STOP_TIMEOUT_MINUTES = intPreferencesKey("auto_stop_timeout_minutes")
         private val LAST_GEOFENCE_SYNC = longPreferencesKey("last_geofence_sync")
         private val LAST_OPERATORS_SYNC = longPreferencesKey("last_operators_sync")
+        private val SATELLITE_MODE = booleanPreferencesKey("satellite_mode")
     }
 
     val locationIntroDone: Flow<Boolean> = context.userDataStore.data.map { it[LOCATION_INTRO_DONE] ?: false }
@@ -31,6 +32,7 @@ class UserPreferencesManager @Inject constructor(
     val autoStopTimeoutMinutes: Flow<Int> = context.userDataStore.data.map { it[AUTO_STOP_TIMEOUT_MINUTES] ?: 5 }
     val lastGeofenceSync: Flow<Long> = context.userDataStore.data.map { it[LAST_GEOFENCE_SYNC] ?: 0L }
     val lastOperatorsSync: Flow<Long> = context.userDataStore.data.map { it[LAST_OPERATORS_SYNC] ?: 0L }
+    val satelliteMode: Flow<Boolean> = context.userDataStore.data.map { it[SATELLITE_MODE] ?: false }
 
     suspend fun setLocationIntroDone(done: Boolean) {
         context.userDataStore.edit { it[LOCATION_INTRO_DONE] = done }
@@ -42,6 +44,10 @@ class UserPreferencesManager @Inject constructor(
 
     suspend fun setAutoStopTimeout(minutes: Int) {
         context.userDataStore.edit { it[AUTO_STOP_TIMEOUT_MINUTES] = minutes }
+    }
+
+    suspend fun setSatelliteMode(enabled: Boolean) {
+        context.userDataStore.edit { it[SATELLITE_MODE] = enabled }
     }
 
     suspend fun updateGeofenceSyncTimestamp() {

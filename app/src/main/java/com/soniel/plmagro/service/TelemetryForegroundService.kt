@@ -37,6 +37,7 @@ class TelemetryForegroundService : Service() {
     private var heartbeatJob: Job? = null
     private var satelliteCount = 0
     private var isPowerSaveMode = false
+    private var isSatelliteMode = false
 
     private val gnssStatusCallback = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
         object : GnssStatus.Callback() {
@@ -109,9 +110,23 @@ class TelemetryForegroundService : Service() {
         requestLocationUpdates()
         
         observeJourney()
+        observePreferences()
         watchdog.startMonitoring()
         startHeartbeat()
         observeWatchdogCommands()
+    }
+
+    private fun observePreferences() {
+        serviceScope.launch {
+            (application as PlmApplication).userPreferencesManager.satelliteMode.collect { mode ->
+                if (isSatelliteMode != mode) {
+                    isSatelliteMode = mode
+                    Log.w(TAG, "SATELLITE_MODE_CHANGED: $isSatelliteMode")
+                    requestLocationUpdates()
+                    startHeartbeat() // Reinicia batimento com novo intervalo
+                }
+            }
+        }
     }
 
     private fun observeWatchdogCommands() {
@@ -179,7 +194,9 @@ class TelemetryForegroundService : Service() {
                         priority = 1
                     )
                 }
-                delay(60000) // 1 minute heartbeat
+                
+                val interval = if (isSatelliteMode) 300000L else 60000L
+                delay(interval)
             }
         }
     }
@@ -199,8 +216,16 @@ class TelemetryForegroundService : Service() {
 
     @SuppressLint("MissingPermission")
     private fun requestLocationUpdates() {
-        val interval = if (isPowerSaveMode) 30000L else UPDATE_INTERVAL
-        val fastest = if (isPowerSaveMode) 15000L else FASTEST_INTERVAL
+        val interval = when {
+            isSatelliteMode -> 60000L
+            isPowerSaveMode -> 30000L
+            else -> UPDATE_INTERVAL
+        }
+        val fastest = when {
+            isSatelliteMode -> 30000L
+            isPowerSaveMode -> 15000L
+            else -> FASTEST_INTERVAL
+        }
 
         // Cancela atualizações antigas antes de iniciar novas
         fusedLocationClient.removeLocationUpdates(locationCallback)

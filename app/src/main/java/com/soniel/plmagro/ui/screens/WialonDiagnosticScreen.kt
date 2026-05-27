@@ -134,12 +134,18 @@ fun WialonDiagnosticScreen(
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
-                        Text("CONEXOES INDUSTRIAIS", color = NeonGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                        Text("CONEXÕES INDUSTRIAIS", color = NeonGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
                         Spacer(modifier = Modifier.height(12.dp))
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             ConnectionChip("GPS", diagState.gps.status)
                             ConnectionChip("WIALON API", diagState.wialon.status)
                             ConnectionChip("IPS TCP", diagState.ips.status)
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                            ConnectionChip("MQTT", diagState.mqtt.status)
+                            ConnectionChip("CAN BUS", diagState.can.status)
+                            ConnectionChip("CENTRAL WEB", diagState.web.status)
                         }
                     }
                 }

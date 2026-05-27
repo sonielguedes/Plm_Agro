@@ -19,6 +19,9 @@ Este documento registra a jornada de evolução técnica e funcional que levou o
 *   **Proteção de Rede Antifragile:** Tratamento de erros e timeouts que eliminam fechamentos inesperados.
 
 ### ⚙️ Engenharia e Arquitetura
+*   **Modo Satelital Otimizado (v4.4.0):** Implementação de modo de baixo consumo de dados para antenas satelitais, com ajustes dinâmicos de GPS, Heartbeat e filtragem de telemetria.
+*   **Dashboard de Saúde Técnica:** Refatoração completa da tela de diagnóstico para incluir status de MQTT, CAN, Central Web e métricas detalhadas de hardware.
+*   **Conformidade Wialon IPS 2.2 (v4.3.0):** Implementação 100% fiel ao protocolo via Socket TCP bruto, incluindo handshake #L# e tratamento rigoroso de ACKs (#AD#1, #AD#0, #AD#-1).
 *   **Assistente de Voz (v4.2.0):** Integração com Text-to-Speech (TTS). O aplicativo agora fala frases de alerta para informar o motivo da parada e avisar sobre movimento sem jornada ativa.
 *   **Feedback Sonoro e Háptico (v4.1.0):** Bipes e vibração integrados aos alertas de GPS e Paradas Automáticas.
 *   **Dagger-Hilt:** Arquitetura profissional com Injeção de Dependência.

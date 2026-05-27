@@ -58,6 +58,7 @@ fun SettingsScreen(
     val linkedUid by viewModel.linkedUid.collectAsStateWithLifecycle()
     val linkedUnitName by viewModel.linkedUnitName.collectAsStateWithLifecycle()
     val autoStopTimeout by viewModel.autoStopTimeoutMinutes.collectAsStateWithLifecycle()
+    val satelliteMode by viewModel.satelliteMode.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -307,6 +308,31 @@ fun SettingsScreen(
                                 keyboardOptions = androidx.compose.foundation.text.KeyboardOptions(keyboardType = androidx.compose.ui.text.input.KeyboardType.Number)
                             )
                             Text("Tempo de inatividade (0 km/h) para pedir o motivo da parada.", fontSize = 10.sp, color = Color.Gray, modifier = Modifier.padding(top = 4.dp))
+                            
+                            Spacer(Modifier.height(16.dp))
+                            HorizontalDivider(color = Color.DarkGray)
+                            Spacer(Modifier.height(12.dp))
+                            
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text("MODO SATELITAL OTIMIZADO", color = if(satelliteMode) NeonGreen else Color.White, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                                    Text("Reduz o tráfego de dados para antenas M2M/Satélite.", fontSize = 10.sp, color = Color.Gray)
+                                }
+                                Switch(
+                                    checked = satelliteMode,
+                                    onCheckedChange = { viewModel.setSatelliteMode(it) },
+                                    colors = SwitchDefaults.colors(
+                                        checkedThumbColor = NeonGreen,
+                                        checkedTrackColor = DarkGreen,
+                                        uncheckedThumbColor = Color.Gray,
+                                        uncheckedTrackColor = Color.DarkGray
+                                    )
+                                )
+                            }
                         }
                     }
 

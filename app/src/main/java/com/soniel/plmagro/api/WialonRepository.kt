@@ -256,16 +256,40 @@ class WialonRepository @Inject constructor(
             val host = sessionManager.ipsHostFlow.first()
             val port = sessionManager.ipsPortFlow.first()
             val uniqueId = sessionManager.linkedUidFlow.first() ?: events.first().vehicleId
-            
-            val packages = events.map { event ->
+            val isSatellite = userPreferencesManager.satelliteMode.first()
+
+            // Otimização Satelital: Se estiver em modo satélite e houver muitos pontos, 
+            // envia apenas o mais recente para economizar dados M2M caros.
+            val filteredEvents = if (isSatellite && events.size > 2) {
+                listOf(events.last())
+            } else events
+
+            val packages = filteredEvents.map { event ->
                 val pMap = try { gson.fromJson(event.payloadJson, Map::class.java) } catch(e: Exception) { null }
-                val j = gson.fromJson(gson.toJson(pMap?.get("journey") ?: event.payloadJson), Journey::class.java)
                 
-                val alt = (pMap?.get("altitude") as? Double) ?: 0.0
-                val sats = (pMap?.get("satellites") as? Double)?.toInt() ?: 0
+                // Extração segura de dados de jornada e telemetria
+                val journeyRaw = pMap?.get("journey") as? Map<String, Any> ?: pMap ?: emptyMap<String, Any>()
+                
+                val lat = (journeyRaw["lastLat"] as? Double) ?: (journeyRaw["latitude"] as? Double) ?: 0.0
+                val lng = (journeyRaw["lastLng"] as? Double) ?: (journeyRaw["longitude"] as? Double) ?: 0.0
+                val speed = (journeyRaw["lastSpeed"] as? Double)?.toFloat() ?: (journeyRaw["speed"] as? Double)?.toFloat() ?: 0f
+                val course = (journeyRaw["lastHeading"] as? Double)?.toFloat() ?: (journeyRaw["course"] as? Double)?.toFloat() ?: 0f
+                val alt = (pMap?.get("altitude") as? Double) ?: (pMap?.get("alt") as? Double) ?: 0.0
+                val sats = (pMap?.get("satellites") as? Double)?.toInt() ?: (pMap?.get("sats") as? Double)?.toInt() ?: 0
+                val hdop = (pMap?.get("hdop") as? Double) ?: 1.0
                 val stats = pMap?.get("stats") as? Map<String, Any>
 
-                WialonIpsProtocol.formatDataPackage(uniqueId, event.timestamp, j.lastLat ?: 0.0, j.lastLng ?: 0.0, j.lastSpeed ?: 0f, j.lastHeading ?: 0f, alt, sats, stats)
+                WialonIpsProtocol.formatDataPackage(
+                    timestamp = event.timestamp,
+                    lat = lat,
+                    lng = lng,
+                    speed = speed,
+                    course = course,
+                    altitude = alt,
+                    satellites = sats,
+                    extraParams = stats,
+                    hdop = hdop
+                )
             }
 
             val start = System.currentTimeMillis()
@@ -276,11 +300,10 @@ class WialonRepository @Inject constructor(
                 val ack = res.getOrNull() ?: "#AD#1"
                 sessionManager.saveLastIpsAck(ack)
                 diagnosticRepository?.updateIpsStatus(ConnectionStatus.ONLINE, latency = latency)
-                events.forEach { event -> 
+                
+                // Se filtramos, precisamos marcar os ignorados como "ENVIADO" (ou descartar) para não acumular
+                events.forEach { _ ->
                     diagnosticRepository?.incrementIpsSent()
-                    if (event.payloadJson.contains("\"type\":\"HEARTBEAT\"")) {
-                        IndustrialLogger.i("WialonRepo", "HEARTBEAT_ACK", mapOf("ack" to ack))
-                    }
                 }
             } else {
                 val err = res.exceptionOrNull()?.message

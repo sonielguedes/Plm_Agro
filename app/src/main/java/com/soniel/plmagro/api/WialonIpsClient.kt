@@ -11,11 +11,7 @@ import java.net.InetSocketAddress
 import java.net.Socket
 
 /**
- * WialonIpsClient - Implementação Industrial via Socket TCP Bruto.
- * 
- * Esta classe remove qualquer dependência de HTTP/Retrofit para a camada de telemetria IPS,
- * operando exclusivamente via java.net.Socket para garantir conformidade com o protocolo
- * e eliminar erros HTTP 400 Bad Request.
+ * WialonIpsClient - Implementação robusta via Socket TCP para Wialon IPS v2.2.
  */
 class WialonIpsClient {
     private val TAG = "IPS"
@@ -25,7 +21,7 @@ class WialonIpsClient {
     private val mutex = Mutex()
 
     /**
-     * Valida o login no gateway IPS via handshake TCP.
+     * Valida o login no gateway IPS.
      */
     suspend fun validateLogin(host: String, port: Int, uniqueId: String): Result<String> = withContext(Dispatchers.IO) {
         mutex.withLock {
@@ -47,39 +43,39 @@ class WialonIpsClient {
         if (socket == null || socket?.isClosed == true || socket?.isConnected == false) {
             closeConnection()
             
-            Log.i(TAG, "SOCKET_CONNECTED: $host:$port")
+            Log.i(TAG, "SOCKET_CONNECTING: $host:$port")
             val newSocket = Socket()
             try {
-                // Timeout de conexão: 15s
-                newSocket.connect(InetSocketAddress(host, port), 15000)
-                // Timeout de leitura: 10s
-                newSocket.soTimeout = 10000
+                // Timeouts industriais
+                newSocket.connect(InetSocketAddress(host, port), 20000)
+                newSocket.soTimeout = 15000
                 
                 val out = newSocket.getOutputStream()
                 val inp = newSocket.getInputStream()
 
-                // Protocolo IPS: Handshake de Login
+                // Protocolo IPS: Login
                 val loginPackage = WialonIpsProtocol.formatLoginPackage(imei)
                 Log.i(TAG, "IPS_LOGIN_SENT: $imei")
                 out.write(loginPackage.toByteArray())
                 out.flush()
 
-                // Aguarda ACK de Login (#AL#1)
+                // Resposta de Login: #AL#1 (Sucesso) ou #AL#0 (Falha)
                 val buffer = ByteArray(128)
                 val bytesRead = inp.read(buffer)
-                if (bytesRead == -1) throw Exception("Conexão encerrada pelo servidor durante login")
+                if (bytesRead <= 0) throw Exception("Sem resposta do servidor no handshake")
                 
                 val response = String(buffer, 0, bytesRead).trim()
-                if (!response.contains("#AL#1")) {
-                    Log.e(TAG, "IPS_LOGIN_ERROR: Login rejeitado pelo servidor: $response")
-                    throw Exception("Login rejeitado pelo servidor: $response")
-                }
-
                 Log.i(TAG, "IPS_LOGIN_ACK: $response")
-                
-                this.socket = newSocket
-                this.outputStream = out
-                this.inputStream = inp
+
+                if (response.contains("#AL#1")) {
+                    this.socket = newSocket
+                    this.outputStream = out
+                    this.inputStream = inp
+                } else if (response.contains("#AL#0")) {
+                    throw Exception("Login rejeitado (Erro 0): Verifique o UniqueID")
+                } else {
+                    throw Exception("Resposta de login inesperada: $response")
+                }
             } catch (e: Exception) {
                 newSocket.close()
                 throw e
@@ -87,14 +83,9 @@ class WialonIpsClient {
         }
     }
 
-    /**
-     * Fecha a conexão TCP e limpa os streams.
-     */
     private fun closeConnection() {
         try {
-            if (socket != null) {
-                Log.w(TAG, "SOCKET_DISCONNECTED")
-            }
+            if (socket != null) Log.w(TAG, "SOCKET_CLOSED")
             outputStream?.close()
             inputStream?.close()
             socket?.close()
@@ -108,15 +99,15 @@ class WialonIpsClient {
     }
 
     /**
-     * Envia pacotes de telemetria/heartbeat via Socket TCP.
+     * Envia pacotes de telemetria e trata os ACKs do protocolo IPS 2.2.
      */
     suspend fun sendMessages(host: String, port: Int, imei: String, messages: List<String>): Result<String> = withContext(Dispatchers.IO) {
         mutex.withLock {
             var lastAck = ""
             try {
                 ensureConnected(host, port, imei)
-                val out = outputStream ?: throw Exception("OutputStream indisponível")
-                val inp = inputStream ?: throw Exception("InputStream indisponível")
+                val out = outputStream ?: throw Exception("Stream de saída indisponível")
+                val inp = inputStream ?: throw Exception("Stream de entrada indisponível")
                 val buffer = ByteArray(128)
 
                 messages.forEach { msg ->
@@ -126,31 +117,38 @@ class WialonIpsClient {
                     out.write(msg.toByteArray())
                     out.flush()
                     
-                    // Aguarda ACK de Dados (#AD#1)
+                    // Aguarda ACK de Dados (#AD#1, #AD#0, #AD#-1)
                     val bytesRead = inp.read(buffer)
                     if (bytesRead > 0) {
                         val resp = String(buffer, 0, bytesRead).trim()
                         val latency = System.currentTimeMillis() - start
                         
-                        if (resp.contains("#AD#1")) {
-                            Log.i(TAG, "IPS_PACKET_ACK: $resp (${latency}ms)")
-                            lastAck = resp
-                        } else if (resp.contains("#AD#-1")) {
-                            Log.e(TAG, "IPS_PACKET_ERROR: Erro de dados (#AD#-1)")
-                            throw Exception("Protocolo: Dados Rejeitados (#AD#-1)")
-                        } else {
-                            Log.w(TAG, "IPS_PACKET_ERROR: Resposta inesperada: $resp")
-                            throw Exception("Protocolo: Resposta inesperada: $resp")
+                        when {
+                            resp.contains("#AD#1") -> {
+                                Log.i(TAG, "IPS_PACKET_ACK: $resp (${latency}ms)")
+                                lastAck = resp
+                            }
+                            resp.contains("#AD#0") -> {
+                                Log.e(TAG, "IPS_PACKET_ERROR: Pacote rejeitado (#AD#0)")
+                                throw Exception("Protocolo: Pacote Rejeitado (#AD#0)")
+                            }
+                            resp.contains("#AD#-1") -> {
+                                Log.e(TAG, "IPS_PACKET_ERROR: Erro de estrutura (#AD#-1)")
+                                throw Exception("Protocolo: Erro de Dados (#AD#-1)")
+                            }
+                            else -> {
+                                Log.w(TAG, "IPS_PACKET_ERROR: Resposta desconhecida: $resp")
+                                throw Exception("Protocolo: Resposta inesperada: $resp")
+                            }
                         }
                     } else {
-                        Log.e(TAG, "IPS_PACKET_ERROR: Timeout aguardando ACK")
-                        throw Exception("Timeout: Sem ACK do servidor")
+                        throw Exception("Conexão interrompida durante envio (Timeout ACK)")
                     }
                 }
                 Result.success(lastAck)
             } catch (e: Exception) {
-                Log.e(TAG, "IPS_TCP_ERROR: ${e.message}")
-                closeConnection() // Força reconexão na próxima tentativa
+                Log.e(TAG, "IPS_TCP_FATAL: ${e.message}")
+                closeConnection()
                 Result.failure(e)
             }
         }
