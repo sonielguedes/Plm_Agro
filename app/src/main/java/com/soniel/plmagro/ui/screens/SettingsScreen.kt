@@ -43,7 +43,8 @@ fun SettingsScreen(
     onNavigateToDiagnostic: (() -> Unit)? = null,
     onNavigateToLinkFleet: (() -> Unit)? = null,
     onNavigateToWialonIpsAdmin: (() -> Unit)? = null,
-    onNavigateToCanBusConfig: (() -> Unit)? = null
+    onNavigateToCanBusConfig: (() -> Unit)? = null,
+    onNavigateToCanBusDiagnostic: (() -> Unit)? = null
 ) {
     val config by viewModel.vehicleConfig.collectAsStateWithLifecycle()
     val diagnosticState by diagnosticViewModel.diagnosticState.collectAsStateWithLifecycle()
@@ -346,6 +347,16 @@ fun SettingsScreen(
                                 text = "CONFIGURAÇÃO DA REDE CAN (OBD2)",
                                 onClick = { onNavigateToCanBusConfig?.invoke() },
                                 icon = Icons.Default.Bluetooth,
+                                containerColor = Color.DarkGray,
+                                contentColor = NeonGreen
+                            )
+                            
+                            Spacer(Modifier.height(12.dp))
+                            
+                            PlmButton(
+                                text = "MONITOR DE REDE (LOG OBD2)",
+                                onClick = { onNavigateToCanBusDiagnostic?.invoke() },
+                                icon = Icons.Default.Info,
                                 containerColor = Color.DarkGray,
                                 contentColor = NeonGreen
                             )

@@ -56,11 +56,22 @@ class MainViewModel @Inject constructor(
     private val sensorWatchdog: com.soniel.plmagro.core.watchdog.SensorWatchdog,
     private val diagnosticRepository: DiagnosticRepository? = null,
     private val outboxManager: OutboxManager? = null,
-    private val alertManager: AlertManager? = null
+    private val alertManager: AlertManager? = null,
+    private val canBusManager: com.soniel.plmagro.core.hardware.CanBusManager
 ) : ViewModel() {
 
     val healthState = ResourceMonitor.healthState.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), ServiceSystemHealth()
+    )
+
+
+
+    val canBusData = canBusManager.canBusDataFlow.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), com.soniel.plmagro.core.hardware.CanBusData(0,0f,0f,0f)
+    )
+
+    val canBusRawLogs = canBusManager.rawLogs.stateIn(
+        viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList<String>()
     )
 
     fun getApplication() = PlmApplication.instance
@@ -233,9 +244,6 @@ class MainViewModel @Inject constructor(
     private val _vinculoSalvo = MutableSharedFlow<Boolean>()
     val vinculoSalvo = _vinculoSalvo.asSharedFlow()
     
-    private val canBusManager = com.soniel.plmagro.PlmApplication.instance.canBusManager
-    val canBusData: StateFlow<com.soniel.plmagro.core.hardware.CanBusData?> = canBusManager.canBusDataFlow
-        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     private val gson = Gson()
 
@@ -548,6 +556,7 @@ class MainViewModel @Inject constructor(
             currentState.collect { state ->
                 if (state == OperationalState.AGUARDANDO_PARADA) {
                     _showAutoStopPopup.value = true
+                    alertManager?.speak("Atenção. Motivo de parada não informado. Por favor, informe o motivo na tela.")
                 } else if (state != OperationalState.PARADO) {
                     _showAutoStopPopup.value = false
                 }

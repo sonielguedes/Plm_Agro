@@ -4,6 +4,7 @@ import androidx.compose.runtime.*
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.soniel.plmagro.ui.screens.*
 import com.soniel.plmagro.ui.permissions.LocationPermissionIntroScreen
 import com.soniel.plmagro.viewmodel.ConfiguracoesViewModel
@@ -32,6 +33,7 @@ sealed class Screen(val route: String) {
     object WialonDiagnostic : Screen("wialon_diagnostic")
     object WialonIpsAdmin : Screen("wialon_ips_admin")
     object CanBusConfig : Screen("canbus_config")
+    object CanBusDiagnostic : Screen("canbus_diagnostic")
     object LinkFleet : Screen("link_fleet")
     object PermissionIntro : Screen("permission_intro")
     object Logbook : Screen("logbook")
@@ -68,10 +70,16 @@ fun NavGraph(
         }
     }
 
-    LaunchedEffect(showAutoStop) {
-        val currentRoute = navController.currentDestination?.route
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+
+    LaunchedEffect(showAutoStop, currentRoute) {
         if (showAutoStop && currentRoute != Screen.EndJourney.route && currentRoute != Screen.Login.route) {
-            navController.navigate(Screen.AutomaticStop.route)
+            if (currentRoute != Screen.AutomaticStop.route) {
+                navController.navigate(Screen.AutomaticStop.route)
+            }
+        } else if (!showAutoStop && currentRoute == Screen.AutomaticStop.route) {
+            navController.popBackStack()
         }
     }
 
@@ -121,7 +129,14 @@ fun NavGraph(
                 onNavigateToDiagnostic = { navController.navigate(Screen.WialonDiagnostic.route) },
                 onNavigateToLinkFleet = { navController.navigate(Screen.LinkFleet.route) },
                 onNavigateToWialonIpsAdmin = { navController.navigate(Screen.WialonIpsAdmin.route) },
-                onNavigateToCanBusConfig = { navController.navigate(Screen.CanBusConfig.route) }
+                onNavigateToCanBusConfig = { navController.navigate(Screen.CanBusConfig.route) },
+                onNavigateToCanBusDiagnostic = { navController.navigate(Screen.CanBusDiagnostic.route) }
+            )
+        }
+        composable(Screen.CanBusDiagnostic.route) {
+            CanBusDiagnosticScreen(
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() }
             )
         }
         composable(Screen.PermissionIntro.route) {
@@ -227,6 +242,7 @@ fun NavGraph(
                 onNavigateToStops = { navController.navigate(Screen.InformStop.route) },
                 onNavigateToEvents = { navController.navigate(Screen.Ocorrencias.route) },
                 onNavigateToDiagnostic = { navController.navigate(Screen.WialonDiagnostic.route) },
+                onNavigateToCanBusDiagnostic = { navController.navigate(Screen.CanBusDiagnostic.route) },
                 onNavigateToIpsAdmin = { navController.navigate(Screen.WialonIpsAdmin.route) },
                 onNavigateToLinkFleet = { navController.navigate(Screen.LinkFleet.route) },
                 onNavigateToOperationalSettings = { navController.navigate(Screen.Settings.route) },

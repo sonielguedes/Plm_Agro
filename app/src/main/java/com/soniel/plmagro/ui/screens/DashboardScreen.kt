@@ -57,6 +57,7 @@ fun DashboardScreen(
     onNavigateToStops: () -> Unit,
     onNavigateToEvents: () -> Unit,
     onNavigateToDiagnostic: () -> Unit,
+    onNavigateToCanBusDiagnostic: () -> Unit,
     onNavigateToIpsAdmin: () -> Unit,
     onNavigateToLinkFleet: () -> Unit,
     onNavigateToOperationalSettings: () -> Unit,
@@ -163,6 +164,17 @@ fun DashboardScreen(
                         onNavigateToDiagnostic() 
                     },
                     icon = { Icon(Icons.Default.Analytics, null, tint = NeonGreen) },
+                    colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
+                )
+
+                NavigationDrawerItem(
+                    label = { Text("Monitor da Rede CAN (OBD2)", color = MaterialTheme.colorScheme.onSurface) },
+                    selected = false,
+                    onClick = { 
+                        scope.launch { drawerState.close() }
+                        onNavigateToCanBusDiagnostic() 
+                    },
+                    icon = { Icon(Icons.Default.Bluetooth, null, tint = NeonGreen) },
                     colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
                 )
 

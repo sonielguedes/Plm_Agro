@@ -66,6 +66,7 @@ class MainActivity : ComponentActivity() {
         val diagnosticRepository = (application as PlmApplication).diagnosticRepository
         val outboxManager = (application as PlmApplication).outboxManager
         val sensorWatchdog = (application as PlmApplication).sensorWatchdog
+        val canBusManager = (application as PlmApplication).canBusManager
         val alertManager = com.soniel.plmagro.core.utils.AlertManager(this)
         
         // Removido start automático do TelemetryForegroundService aqui
@@ -76,7 +77,7 @@ class MainActivity : ComponentActivity() {
                 factory = object : ViewModelProvider.Factory {
                     @Suppress("UNCHECKED_CAST")
                     override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                        return MainViewModel(repository, wialonRepository, sessionManager, userPreferencesManager, sensorWatchdog, diagnosticRepository, outboxManager, alertManager) as T
+                        return MainViewModel(repository, wialonRepository, sessionManager, userPreferencesManager, sensorWatchdog, diagnosticRepository, outboxManager, alertManager, canBusManager) as T
                     }
                 }
             )
