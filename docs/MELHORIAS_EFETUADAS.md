@@ -19,6 +19,8 @@ Este documento registra a jornada de evolução técnica e funcional que levou o
 *   **Proteção de Rede Antifragile:** Tratamento de erros e timeouts que eliminam fechamentos inesperados.
 
 ### ⚙️ Engenharia e Arquitetura
+*   **Modo Noturno Automático (v5.1.0):** Implementação de tema claro de alto contraste e troca dinâmica baseada em horário para reduzir fadiga visual durante as jornadas noturnas.
+*   **Integração CAN BUS J1939 (v5.0.0):** Infraestrutura estabelecida no `CanBusManager` e integrada ao ciclo do Wialon IPS para coleta transparente de Rotação (RPM), Temperatura do Motor e Combustível (OBD2/Bluetooth).
 *   **Expansão do Menu Industrial (v4.9.0):** Implementação de novos pontos de controle no menu lateral, incluindo visualização da Fila de Sincronização (Outbox), Central de Mensagens (Chat), Gatilho de Sincronização Manual e atalhos para Vínculo de Frota.
 *   **Módulo de Mensagens da Central (v4.9.0):** Nova tela para visualização de instruções e alertas enviados pela logística via Wialon API, com suporte a prioridades e confirmação de leitura.
 *   **Módulo de Performance Operacional (v4.8.0):** Cálculo em tempo real de % de produtividade, tempo operando vs parado e velocidade média. Inclui alertas vocais do "Coach de Operação" para incentivar a produtividade no campo.

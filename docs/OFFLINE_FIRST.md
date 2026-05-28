@@ -45,3 +45,11 @@ Ao recuperar a conexão, o sistema inicia o **Replay Industrial**:
 ## 5. Sobrevivência a Process Death e Reboot
 - O `OutboxManager` reinicia automaticamente via `BootReceiver`.
 - O estado `PENDENTE` no banco garante que nenhum dado seja perdido se o tablet for desligado subitamente.
+
+---
+
+## 6. Rastreamento Satelital Blindado (GPS Sem Internet)
+A captura de telemetria não requer pacotes de dados. Ela é sustentada pelas seguintes fundações:
+- **Prioridade de Alta Precisão:** O app solicita explicitamente o `Priority.PRIORITY_HIGH_ACCURACY`, forçando o Android a acordar a antena de GPS física do tablet e buscar a triangulação direto com satélites, sem depender do A-GPS de rede.
+- **Gravação Silenciosa:** Cada coordenada capturada (mesmo 100% offline) é gravada na tabela de telemetria via `PlmRepository`. Caso a variação de ângulo ou distância seja alta o suficiente, um pacote `#D#` é gerado na tabela `sync_outbox`.
+- **Injeção de Pós-Conexão:** Quando a internet for detectada, o *Replay Offline* agrupa todas essas milhares de coordenadas silenciosas e empurra para a plataforma Wialon. O rastro da viagem no mapa aparecerá intacto, com velocidades e acelerações preservadas.

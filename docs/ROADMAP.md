@@ -47,14 +47,14 @@ O objetivo é transformar o aplicativo de uma ferramenta de registro manual em u
 
 ---
 
-## 🚀 FASE 5: Expansão e Ecossistema (EM ANDAMENTO)
+## 🚀 FASE 5: Expansão e Ecossistema (CONCLUÍDO)
 *   **Menu Industrial Expandido (CONCLUÍDO):**
     *   *Ação:* Implementação de Outbox, Chat, Sincronização Manual e atalhos rápidos no Drawer.
-*   **Modo Noturno Automático (EM ANDAMENTO):**
+*   **Modo Noturno Automático (CONCLUÍDO):**
     *   *Ação:* Ajuste de brilho e contraste da UI baseado no horário local para reduzir fadiga.
-*   **Checklist de Segurança Digital:**
-    *   *Ação:* Validação de MDM e bloqueio de apps não autorizados durante a jornada.
-*   **Integração CAN BUS Avançada:**
+*   **Checklist de Segurança Digital (REMOVIDO):**
+    *   *Ação:* Validação de MDM e bloqueio de apps não autorizados durante a jornada (Removido do escopo).
+*   **Integração CAN BUS Avançada (CONCLUÍDO):**
     *   *Ação:* Captura de dados de motor e consumo direto do veículo (J1939).
 
 ---
@@ -67,4 +67,4 @@ Sempre que o Agente atuar, ele deve seguir estas diretrizes:
 
 ---
 
-**Fases 1, 2, 3 e 4 integradas com sucesso. Iniciando FASE 5.**
+**Fases 1, 2, 3, 4 e 5 concluídas com sucesso. O Roadmap atinge seu ápice planejado.**

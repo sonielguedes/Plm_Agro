@@ -30,10 +30,7 @@ import com.soniel.plmagro.viewmodel.WialonConnectionStatus
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.launch
 
-private val DashboardBlack = Color(0xFF121212)
-private val DashboardCard = Color(0xFF1E1E1E)
-private val DashboardMuted = Color(0xFF9E9E9E)
-private val DashboardDanger = Color(0xFFFF5252)
+// Cores removidas. Usaremos MaterialTheme.colorScheme agora.
 
 @Composable
 fun DashboardScreen(
@@ -94,20 +91,20 @@ fun DashboardScreen(
         drawerState = drawerState,
         drawerContent = {
             ModalDrawerSheet(
-                drawerContainerColor = DashboardCard,
+                drawerContainerColor = MaterialTheme.colorScheme.surface,
                 modifier = Modifier.width(280.dp)
             ) {
                 Spacer(Modifier.height(24.dp))
                 Column(modifier = Modifier.padding(16.dp)) {
-                    Text("PLMAGRO", color = NeonGreen, fontSize = 24.sp, fontWeight = FontWeight.Black)
-                    Text("MENU INDUSTRIAL", color = Color.Gray, fontSize = 12.sp)
+                    Text("PLMAGRO", color = MaterialTheme.colorScheme.primary, fontSize = 24.sp, fontWeight = FontWeight.Black)
+                    Text("MENU INDUSTRIAL", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp)
                 }
                 HorizontalDivider(color = Color.DarkGray, modifier = Modifier.padding(vertical = 8.dp))
                 
                 NavigationDrawerItem(
                     label = { 
                         Row(verticalAlignment = Alignment.CenterVertically) {
-                            Text("Mensagens da Central", color = Color.White, modifier = Modifier.weight(1f))
+                            Text("Mensagens da Central", color = MaterialTheme.colorScheme.onSurface, modifier = Modifier.weight(1f))
                             if (unreadCount > 0) {
                                 Badge(containerColor = Color.Red) {
                                     Text("$unreadCount", color = Color.White)
@@ -135,7 +132,7 @@ fun DashboardScreen(
                 )
 
                 NavigationDrawerItem(
-                    label = { Text("Diário de Bordo", color = Color.White) },
+                    label = { Text("Diário de Bordo", color = MaterialTheme.colorScheme.onSurface) },
                     selected = false,
                     onClick = { 
                         scope.launch { drawerState.close() }
@@ -146,7 +143,7 @@ fun DashboardScreen(
                 )
 
                 NavigationDrawerItem(
-                    label = { Text("Histórico de Viagens", color = Color.White) },
+                    label = { Text("Histórico de Viagens", color = MaterialTheme.colorScheme.onSurface) },
                     selected = false,
                     onClick = { 
                         scope.launch { drawerState.close() }
@@ -159,7 +156,7 @@ fun DashboardScreen(
                 HorizontalDivider(color = Color.DarkGray, modifier = Modifier.padding(vertical = 8.dp))
 
                 NavigationDrawerItem(
-                    label = { Text("Diagnóstico de Hardware", color = Color.White) },
+                    label = { Text("Diagnóstico de Hardware", color = MaterialTheme.colorScheme.onSurface) },
                     selected = false,
                     onClick = { 
                         scope.launch { drawerState.close() }
@@ -170,7 +167,7 @@ fun DashboardScreen(
                 )
 
                 NavigationDrawerItem(
-                    label = { Text("Fila de Sincronização", color = Color.White) },
+                    label = { Text("Fila de Sincronização", color = MaterialTheme.colorScheme.onSurface) },
                     selected = false,
                     onClick = { 
                         scope.launch { drawerState.close() }
@@ -181,7 +178,7 @@ fun DashboardScreen(
                 )
 
                 NavigationDrawerItem(
-                    label = { Text("Sincronizar Agora", color = Color.White) },
+                    label = { Text("Sincronizar Agora", color = MaterialTheme.colorScheme.onSurface) },
                     selected = false,
                     onClick = { 
                         scope.launch { 
@@ -196,7 +193,7 @@ fun DashboardScreen(
                 HorizontalDivider(color = Color.DarkGray, modifier = Modifier.padding(vertical = 8.dp))
 
                 NavigationDrawerItem(
-                    label = { Text("Vincular Frota (Wialon)", color = Color.White) },
+                    label = { Text("Vincular Frota (Wialon)", color = MaterialTheme.colorScheme.onSurface) },
                     selected = false,
                     onClick = { 
                         scope.launch { drawerState.close() }
@@ -207,7 +204,7 @@ fun DashboardScreen(
                 )
 
                 NavigationDrawerItem(
-                    label = { Text("Configurações", color = Color.White) },
+                    label = { Text("Configurações", color = MaterialTheme.colorScheme.onSurface) },
                     selected = false,
                     onClick = { 
                         scope.launch { drawerState.close() }
@@ -218,7 +215,7 @@ fun DashboardScreen(
                 )
 
                 NavigationDrawerItem(
-                    label = { Text("Sobre o Sistema", color = Color.White) },
+                    label = { Text("Sobre o Sistema", color = MaterialTheme.colorScheme.onSurface) },
                     selected = false,
                     onClick = { 
                         scope.launch { drawerState.close() }
@@ -232,13 +229,13 @@ fun DashboardScreen(
                 HorizontalDivider(color = Color.DarkGray)
                 
                 NavigationDrawerItem(
-                    label = { Text("Sair do Aplicativo", color = DashboardDanger) },
+                    label = { Text("Sair do Aplicativo", color = MaterialTheme.colorScheme.error) },
                     selected = false,
                     onClick = { 
                         scope.launch { drawerState.close() }
                         onLogout() 
                     },
-                    icon = { Icon(Icons.AutoMirrored.Filled.Logout, null, tint = DashboardDanger) },
+                    icon = { Icon(Icons.AutoMirrored.Filled.Logout, null, tint = MaterialTheme.colorScheme.error) },
                     colors = NavigationDrawerItemDefaults.colors(unselectedContainerColor = Color.Transparent)
                 )
                 Spacer(Modifier.height(16.dp))
@@ -247,7 +244,7 @@ fun DashboardScreen(
     ) {
         Scaffold(
             snackbarHost = { SnackbarHost(snackbarHostState) },
-            containerColor = DashboardBlack
+            containerColor = MaterialTheme.colorScheme.background
         ) { padding ->
             Column(
                 modifier = Modifier
@@ -264,8 +261,8 @@ fun DashboardScreen(
                     horizontalArrangement = Arrangement.SpaceBetween
                 ) {
                     Column {
-                        Text("PLMAGRO", color = NeonGreen, fontSize = 20.sp, fontWeight = FontWeight.Black)
-                        Text("OPERACIONAL VEICULAR", color = Color.White, fontSize = 10.sp)
+                        Text("PLMAGRO", color = MaterialTheme.colorScheme.primary, fontSize = 20.sp, fontWeight = FontWeight.Black)
+                        Text("OPERACIONAL VEICULAR", color = MaterialTheme.colorScheme.onBackground, fontSize = 10.sp)
                     }
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         IconButton(onClick = onNavigateToMessages) {
@@ -285,7 +282,7 @@ fun DashboardScreen(
                             Icon(Icons.AutoMirrored.Filled.Assignment, "Jornada", tint = NeonGreen) 
                         }
                         IconButton(onClick = { scope.launch { drawerState.open() } }) {
-                            Icon(Icons.Default.Menu, "Abrir Menu", tint = Color.White)
+                            Icon(Icons.Default.Menu, "Abrir Menu", tint = MaterialTheme.colorScheme.onBackground)
                         }
                     }
                 }
@@ -299,13 +296,13 @@ fun DashboardScreen(
                 // Card do Veiculo
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = DashboardCard),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Column(modifier = Modifier.padding(16.dp)) {
                         Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
                             Text(if (activeVinculo == null) "NÃO VINCULADO" else "VINCULADO: ${activeVinculo?.wialonNome}", 
-                                color = if (activeVinculo == null) DashboardDanger else NeonGreen, 
+                                color = if (activeVinculo == null) Color.Red else MaterialTheme.colorScheme.primary, 
                                 fontSize = 12.sp, fontWeight = FontWeight.Bold)
                             
                             if (diagState.alertaManutencaoAtivo) {
@@ -316,10 +313,10 @@ fun DashboardScreen(
                                 }
                             }
                         }
-                        Text(vehicleId, color = Color.White, fontSize = 28.sp, fontWeight = FontWeight.Black)
-                        Text("Placa: $vehiclePlate", color = Color.Gray, fontSize = 14.sp)
+                        Text(vehicleId, color = MaterialTheme.colorScheme.onSurface, fontSize = 28.sp, fontWeight = FontWeight.Black)
+                        Text("Placa: $vehiclePlate", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 14.sp)
                         Spacer(Modifier.height(8.dp))
-                        Text("OPERADOR: $operatorName", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("OPERADOR: $operatorName", color = MaterialTheme.colorScheme.onSurface, fontWeight = FontWeight.Bold)
                     }
                 }
 
@@ -331,7 +328,7 @@ fun DashboardScreen(
                     }
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                         SimpleStatCard("PRODUTIVIDADE", "${diagState.produtividadePercent}%", Modifier.weight(1f), 
-                            valueColor = if(diagState.produtividadePercent > 80) NeonGreen else if(diagState.produtividadePercent > 50) Color.Yellow else DashboardDanger)
+                            valueColor = if(diagState.produtividadePercent > 80) MaterialTheme.colorScheme.primary else if(diagState.produtividadePercent > 50) Color.Yellow else Color.Red)
                         SimpleStatCard("VELOC. MÉDIA", "${"%.1f".format(diagState.velocidadeMediaOperacao)} km/h", Modifier.weight(1f))
                     }
                     Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
@@ -343,11 +340,11 @@ fun DashboardScreen(
                 // Status Central
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(containerColor = Color(0xFF252525)),
+                    colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
                     shape = RoundedCornerShape(8.dp)
                 ) {
                     Column(modifier = Modifier.padding(24.dp).fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text("STATUS INDUSTRIAL", color = DashboardMuted, fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        Text("STATUS INDUSTRIAL", color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 12.sp, fontWeight = FontWeight.Bold)
                         Text(statusText, color = industrialStatusColor(statusText), fontSize = 32.sp, fontWeight = FontWeight.Black, textAlign = TextAlign.Center)
                     }
                 }
@@ -357,22 +354,22 @@ fun DashboardScreen(
                     Button(
                         onClick = { if (activeJourney == null) onNavigateToJourney() else onInformOperation() },
                         modifier = Modifier.weight(1f).fillMaxHeight(),
-                        colors = ButtonDefaults.buttonColors(containerColor = NeonGreen),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.primary),
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Icon(Icons.Default.Settings, null, tint = Color.Black)
+                        Icon(Icons.Default.Settings, null, tint = MaterialTheme.colorScheme.onPrimary)
                         Spacer(Modifier.width(8.dp))
-                        Text("OPERAÇÃO", color = Color.Black, fontWeight = FontWeight.Bold)
+                        Text("OPERAÇÃO", color = MaterialTheme.colorScheme.onPrimary, fontWeight = FontWeight.Bold)
                     }
                     Button(
                         onClick = onInformStop,
                         modifier = Modifier.weight(1f).fillMaxHeight(),
-                        colors = ButtonDefaults.buttonColors(containerColor = Color.DarkGray),
+                        colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
                         shape = RoundedCornerShape(8.dp)
                     ) {
-                        Icon(Icons.Default.Pause, null, tint = Color.White)
+                        Icon(Icons.Default.Pause, null, tint = MaterialTheme.colorScheme.onSecondary)
                         Spacer(Modifier.width(8.dp))
-                        Text("PARADA", color = Color.White, fontWeight = FontWeight.Bold)
+                        Text("PARADA", color = MaterialTheme.colorScheme.onSecondary, fontWeight = FontWeight.Bold)
                     }
                 }
 
@@ -380,8 +377,8 @@ fun DashboardScreen(
 
                 // Rodapé
                 Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
-                    Text("GPS: $gpsLocation", color = DashboardMuted, fontSize = 10.sp)
-                    Text(currentTime, color = DashboardMuted, fontSize = 10.sp)
+                    Text("GPS: $gpsLocation", color = MaterialTheme.colorScheme.onBackground, fontSize = 10.sp)
+                    Text(currentTime, color = MaterialTheme.colorScheme.onBackground, fontSize = 10.sp)
                 }
             }
         }
@@ -392,12 +389,12 @@ fun DashboardScreen(
 private fun SimpleStatCard(label: String, value: String, modifier: Modifier = Modifier, valueColor: Color = Color.White) {
     Card(
         modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = DashboardCard),
+        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         shape = RoundedCornerShape(8.dp)
     ) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text(label, color = DashboardMuted, fontSize = 10.sp, fontWeight = FontWeight.Bold)
-            Text(value, color = valueColor, fontSize = 18.sp, fontWeight = FontWeight.Black)
+            Text(label, color = MaterialTheme.colorScheme.onSurfaceVariant, fontSize = 10.sp, fontWeight = FontWeight.Bold)
+            Text(value, color = if (valueColor == Color.White) MaterialTheme.colorScheme.onSurface else valueColor, fontSize = 18.sp, fontWeight = FontWeight.Black)
         }
     }
 }
@@ -407,7 +404,7 @@ private fun StatusIndicator(label: String, status: WialonConnectionStatus) {
     val color = when (status) {
         WialonConnectionStatus.ONLINE -> NeonGreen
         WialonConnectionStatus.SYNCING -> Color.Yellow
-        else -> DashboardDanger
+        else -> Color.Red
     }
     Row(verticalAlignment = Alignment.CenterVertically) {
         Box(modifier = Modifier.size(8.dp).background(color, RoundedCornerShape(4.dp)))
@@ -434,7 +431,7 @@ private fun industrialStatusColor(status: String): Color {
         "PARADO" -> Color(0xFFFFC107)
         "PARADA_APONTADA" -> Color(0xFFFFA000)
         "AGUARDANDO" -> Color.White
-        "MANUTENCAO" -> DashboardDanger
+        "MANUTENCAO" -> Color.Red
         else -> Color.White
     }
 }

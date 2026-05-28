@@ -25,6 +25,11 @@ class UserPreferencesManager @Inject constructor(
         private val LAST_GEOFENCE_SYNC = longPreferencesKey("last_geofence_sync")
         private val LAST_OPERATORS_SYNC = longPreferencesKey("last_operators_sync")
         private val SATELLITE_MODE = booleanPreferencesKey("satellite_mode")
+        private val SUPERVISOR_MODE = booleanPreferencesKey("supervisor_mode")
+        private val CANBUS_MODE = androidx.datastore.preferences.core.stringPreferencesKey("canbus_mode")
+        private val CANBUS_BT_MAC = androidx.datastore.preferences.core.stringPreferencesKey("canbus_bt_mac")
+        private val CANBUS_USB_PORT = androidx.datastore.preferences.core.stringPreferencesKey("canbus_usb_port")
+        private val ERP_API_URL = androidx.datastore.preferences.core.stringPreferencesKey("erp_api_url")
     }
 
     val locationIntroDone: Flow<Boolean> = context.userDataStore.data.map { it[LOCATION_INTRO_DONE] ?: false }
@@ -33,6 +38,12 @@ class UserPreferencesManager @Inject constructor(
     val lastGeofenceSync: Flow<Long> = context.userDataStore.data.map { it[LAST_GEOFENCE_SYNC] ?: 0L }
     val lastOperatorsSync: Flow<Long> = context.userDataStore.data.map { it[LAST_OPERATORS_SYNC] ?: 0L }
     val satelliteMode: Flow<Boolean> = context.userDataStore.data.map { it[SATELLITE_MODE] ?: false }
+    val supervisorMode: Flow<Boolean> = context.userDataStore.data.map { it[SUPERVISOR_MODE] ?: false }
+    
+    val canBusMode: Flow<String> = context.userDataStore.data.map { it[CANBUS_MODE] ?: "SIMULATED" }
+    val canBusBtMac: Flow<String> = context.userDataStore.data.map { it[CANBUS_BT_MAC] ?: "" }
+    val canBusUsbPort: Flow<String> = context.userDataStore.data.map { it[CANBUS_USB_PORT] ?: "/dev/ttyUSB0" }
+    val erpApiUrl: Flow<String> = context.userDataStore.data.map { it[ERP_API_URL] ?: "" }
 
     suspend fun setLocationIntroDone(done: Boolean) {
         context.userDataStore.edit { it[LOCATION_INTRO_DONE] = done }
@@ -48,6 +59,22 @@ class UserPreferencesManager @Inject constructor(
 
     suspend fun setSatelliteMode(enabled: Boolean) {
         context.userDataStore.edit { it[SATELLITE_MODE] = enabled }
+    }
+
+    suspend fun setSupervisorMode(enabled: Boolean) {
+        context.userDataStore.edit { it[SUPERVISOR_MODE] = enabled }
+    }
+
+    suspend fun saveCanBusConfig(mode: String, btMac: String, usbPort: String) {
+        context.userDataStore.edit { prefs ->
+            prefs[CANBUS_MODE] = mode
+            prefs[CANBUS_BT_MAC] = btMac
+            prefs[CANBUS_USB_PORT] = usbPort
+        }
+    }
+
+    suspend fun setErpApiUrl(url: String) {
+        context.userDataStore.edit { it[ERP_API_URL] = url }
     }
 
     suspend fun updateGeofenceSyncTimestamp() {

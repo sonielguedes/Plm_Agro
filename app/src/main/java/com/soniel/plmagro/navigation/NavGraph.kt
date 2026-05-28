@@ -31,6 +31,7 @@ sealed class Screen(val route: String) {
     object Ocorrencias : Screen("ocorrencias")
     object WialonDiagnostic : Screen("wialon_diagnostic")
     object WialonIpsAdmin : Screen("wialon_ips_admin")
+    object CanBusConfig : Screen("canbus_config")
     object LinkFleet : Screen("link_fleet")
     object PermissionIntro : Screen("permission_intro")
     object Logbook : Screen("logbook")
@@ -119,7 +120,8 @@ fun NavGraph(
                 },
                 onNavigateToDiagnostic = { navController.navigate(Screen.WialonDiagnostic.route) },
                 onNavigateToLinkFleet = { navController.navigate(Screen.LinkFleet.route) },
-                onNavigateToWialonIpsAdmin = { navController.navigate(Screen.WialonIpsAdmin.route) }
+                onNavigateToWialonIpsAdmin = { navController.navigate(Screen.WialonIpsAdmin.route) },
+                onNavigateToCanBusConfig = { navController.navigate(Screen.CanBusConfig.route) }
             )
         }
         composable(Screen.PermissionIntro.route) {
@@ -322,7 +324,14 @@ fun NavGraph(
                 onBack = { navController.popBackStack() },
                 onNavigateToDiagnostic = { navController.navigate(Screen.WialonDiagnostic.route) },
                 onNavigateToLinkFleet = { navController.navigate(Screen.LinkFleet.route) },
-                onNavigateToWialonIpsAdmin = { navController.navigate(Screen.WialonIpsAdmin.route) }
+                onNavigateToWialonIpsAdmin = { navController.navigate(Screen.WialonIpsAdmin.route) },
+                onNavigateToCanBusConfig = { navController.navigate(Screen.CanBusConfig.route) }
+            )
+        }
+        composable(Screen.CanBusConfig.route) {
+            CanBusConfigScreen(
+                viewModel = viewModel,
+                onBack = { navController.popBackStack() }
             )
         }
         composable(Screen.WialonDiagnostic.route) {

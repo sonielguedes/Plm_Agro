@@ -3,6 +3,7 @@ package com.soniel.plmagro.di
 import android.content.Context
 import com.soniel.plmagro.api.WialonRepository
 import com.soniel.plmagro.api.WialonSessionManager
+import com.google.gson.Gson
 import com.soniel.plmagro.core.outbox.OutboxManager
 import com.soniel.plmagro.core.utils.AlertManager
 import com.soniel.plmagro.model.DiagnosticRepository
@@ -14,11 +15,26 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
+import okhttp3.OkHttpClient
 import javax.inject.Singleton
 
 @Module
 @InstallIn(SingletonComponent::class)
 object AppModule {
+
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(): OkHttpClient {
+        return OkHttpClient.Builder().build()
+    }
+
+    @Provides
+    @Singleton
+    fun provideGson(): Gson {
+        return Gson()
+    }
+
+
 
     @Provides
     @Singleton
@@ -36,9 +52,10 @@ object AppModule {
     @Singleton
     fun providePlmRepository(
         plmDao: PlmDao,
+        canBusManager: com.soniel.plmagro.core.hardware.CanBusManager,
         @ApplicationContext context: Context
     ): PlmRepository {
-        return PlmRepository(plmDao, context)
+        return PlmRepository(plmDao, canBusManager, context)
     }
 
     @Provides
@@ -69,8 +86,10 @@ object AppModule {
     fun provideOutboxManager(
         plmDao: PlmDao,
         wialonRepository: WialonRepository,
+        erpRepository: com.soniel.plmagro.api.ErpRepository,
+        userPreferencesManager: UserPreferencesManager,
         @ApplicationContext context: Context
     ): OutboxManager {
-        return OutboxManager(plmDao, wialonRepository, context)
+        return OutboxManager(plmDao, wialonRepository, erpRepository, userPreferencesManager, context)
     }
 }

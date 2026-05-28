@@ -18,6 +18,8 @@ import androidx.navigation.compose.rememberNavController
 import com.soniel.plmagro.navigation.NavGraph
 import com.soniel.plmagro.ui.theme.PlmAgroTheme
 
+import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -70,15 +72,17 @@ class MainActivity : ComponentActivity() {
         // O serviço será iniciado no NavGraph após as permissões serem validadas
 
         setContent {
-            PlmAgroTheme {
-                val viewModel: MainViewModel = viewModel(
-                    factory = object : ViewModelProvider.Factory {
-                        @Suppress("UNCHECKED_CAST")
-                        override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                            return MainViewModel(repository, wialonRepository, sessionManager, userPreferencesManager, sensorWatchdog, diagnosticRepository, outboxManager, alertManager) as T
-                        }
+            val viewModel: MainViewModel = viewModel(
+                factory = object : ViewModelProvider.Factory {
+                    @Suppress("UNCHECKED_CAST")
+                    override fun <T : ViewModel> create(modelClass: Class<T>): T {
+                        return MainViewModel(repository, wialonRepository, sessionManager, userPreferencesManager, sensorWatchdog, diagnosticRepository, outboxManager, alertManager) as T
                     }
-                )
+                }
+            )
+            val isNightMode by viewModel.isNightMode.collectAsState()
+
+            PlmAgroTheme(isNightMode = isNightMode) {
                 
                 // Re-check permissions on activity resume
                 androidx.compose.runtime.DisposableEffect(Unit) {

@@ -44,6 +44,7 @@ fun WialonDiagnosticScreen(
     val recentEvents by viewModel.recentSyncEvents.collectAsState()
     val isLoading by viewModel.isLoading.collectAsState()
     val healthState by viewModel.healthState.collectAsState()
+    val canBusData by viewModel.canBusData.collectAsState()
     
     var showTokenEdit by remember { mutableStateOf(false) }
     var newToken by remember(token) { mutableStateOf(token ?: "") }
@@ -177,6 +178,26 @@ fun WialonDiagnosticScreen(
                             DiagnosticItem("GPS HW", if (diagState.gpsHardwareActive) "ATIVO" else "INATIVO")
                             DiagnosticItem("DISK", storage.detail)
                             DiagnosticItem("COLETORES", "${healthState.activeCollectors}")
+                        }
+                    }
+                }
+            }
+
+            // 3.5 CAN BUS Telemetry
+            if (canBusData != null) {
+                item {
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = Color(0xFF1A1A1A)),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Text("TELEMETRIA VEICULAR (CAN/OBD2)", color = NeonGreen, fontWeight = FontWeight.Bold, fontSize = 12.sp)
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+                                DiagnosticItem("ROTAÇÃO (RPM)", "${canBusData?.rpm} rpm")
+                                DiagnosticItem("TEMP MOTOR", "${canBusData?.engineTemp}°C")
+                                DiagnosticItem("NÍVEL COMBUSTÍVEL", "${canBusData?.fuelLevel}%")
+                            }
                         }
                     }
                 }

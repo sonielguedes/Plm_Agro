@@ -77,9 +77,23 @@ class MainViewModel @Inject constructor(
         viewModelScope, SharingStarted.WhileSubscribed(5000), 5
     )
 
-    val satelliteMode = userPreferencesManager.satelliteMode.stateIn(
-        viewModelScope, SharingStarted.WhileSubscribed(5000), false
-    )
+    val satelliteMode = userPreferencesManager.satelliteMode
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+        
+    val supervisorMode = userPreferencesManager.supervisorMode
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), false)
+
+    val canBusMode = userPreferencesManager.canBusMode
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "SIMULATED")
+
+    val canBusBtMac = userPreferencesManager.canBusBtMac
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
+
+    val canBusUsbPort = userPreferencesManager.canBusUsbPort
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "/dev/ttyUSB0")
+
+    val erpApiUrl = userPreferencesManager.erpApiUrl
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
 
     val vehicleConfig = repository.vehicleConfig.stateIn(
         viewModelScope, SharingStarted.WhileSubscribed(5000), null
@@ -218,6 +232,10 @@ class MainViewModel @Inject constructor(
 
     private val _vinculoSalvo = MutableSharedFlow<Boolean>()
     val vinculoSalvo = _vinculoSalvo.asSharedFlow()
+    
+    private val canBusManager = com.soniel.plmagro.PlmApplication.instance.canBusManager
+    val canBusData: StateFlow<com.soniel.plmagro.core.hardware.CanBusData?> = canBusManager.canBusDataFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), null)
 
     private val gson = Gson()
 
@@ -405,7 +423,26 @@ class MainViewModel @Inject constructor(
     fun setSatelliteMode(enabled: Boolean) {
         viewModelScope.launch {
             userPreferencesManager.setSatelliteMode(enabled)
-            _uiMessage.emit("Modo Satelital ${if(enabled) "Ativado" else "Desativado"}")
+        }
+    }
+
+    fun setSupervisorMode(enabled: Boolean) {
+        viewModelScope.launch {
+            userPreferencesManager.setSupervisorMode(enabled)
+        }
+    }
+
+    fun saveCanBusConfig(mode: String, btMac: String, usbPort: String) {
+        viewModelScope.launch {
+            userPreferencesManager.saveCanBusConfig(mode, btMac, usbPort)
+            _uiMessage.emit("Configuração CAN Bus salva com sucesso")
+        }
+    }
+
+    fun setErpApiUrl(url: String) {
+        viewModelScope.launch {
+            userPreferencesManager.setErpApiUrl(url)
+            _uiMessage.emit("URL do ERP salva com sucesso")
         }
     }
 

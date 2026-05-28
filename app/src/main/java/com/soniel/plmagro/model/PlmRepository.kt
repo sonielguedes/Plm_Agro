@@ -15,6 +15,7 @@ import java.security.MessageDigest
 
 class PlmRepository(
     private val plmDao: PlmDao,
+    private val canBusManager: com.soniel.plmagro.core.hardware.CanBusManager,
     private val context: Context
 ) {
     private val gson = Gson()
@@ -537,7 +538,19 @@ class PlmRepository(
         
         // Every relevant GPS event should go to outbox (Phase 5 requirement 6)
         if (distance > 5.0 || Math.abs((journey.lastHeading ?: 0f) - heading) > 10f) {
-             val deviceStats = DeviceStatsUtils.getSystemStats(context)
+             val deviceStats = DeviceStatsUtils.getSystemStats(context).toMutableMap()
+             
+             // Captura de dados CAN BUS recentes
+             try {
+                 val canData = canBusManager.canBusDataFlow.first()
+                 deviceStats["rpm"] = canData.rpm
+                 deviceStats["engine_temp"] = canData.engineTemp
+                 deviceStats["fuel_level"] = canData.fuelLevel
+                 deviceStats["fuel_cons"] = canData.fuelConsumption
+             } catch (e: Exception) {
+                 Log.e("TELEMETRIA", "Erro ao obter dados CAN: ${e.message}")
+             }
+             
              val payload = mapOf(
                  "journey" to updated,
                  "stats" to deviceStats,

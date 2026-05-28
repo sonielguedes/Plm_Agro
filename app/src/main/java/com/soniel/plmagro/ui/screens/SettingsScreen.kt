@@ -42,7 +42,8 @@ fun SettingsScreen(
     onBack: () -> Unit,
     onNavigateToDiagnostic: (() -> Unit)? = null,
     onNavigateToLinkFleet: (() -> Unit)? = null,
-    onNavigateToWialonIpsAdmin: (() -> Unit)? = null
+    onNavigateToWialonIpsAdmin: (() -> Unit)? = null,
+    onNavigateToCanBusConfig: (() -> Unit)? = null
 ) {
     val config by viewModel.vehicleConfig.collectAsStateWithLifecycle()
     val diagnosticState by diagnosticViewModel.diagnosticState.collectAsStateWithLifecycle()
@@ -59,6 +60,8 @@ fun SettingsScreen(
     val linkedUnitName by viewModel.linkedUnitName.collectAsStateWithLifecycle()
     val autoStopTimeout by viewModel.autoStopTimeoutMinutes.collectAsStateWithLifecycle()
     val satelliteMode by viewModel.satelliteMode.collectAsStateWithLifecycle()
+    val supervisorMode by viewModel.supervisorMode.collectAsStateWithLifecycle()
+    val savedErpApiUrl by viewModel.erpApiUrl.collectAsStateWithLifecycle()
 
     val snackbarHostState = remember { SnackbarHostState() }
 
@@ -78,6 +81,19 @@ fun SettingsScreen(
     
     var maintenanceTarget by remember(config) { mutableStateOf(config?.horimetroManutencao?.toString() ?: "0.0") }
     var maintenanceAlertThreshold by remember(config) { mutableStateOf(config?.alertaManutencaoHoras?.toString() ?: "50.0") }
+    var erpApiUrl by remember { mutableStateOf(savedErpApiUrl) }
+
+    LaunchedEffect(config, wialonStatus, savedIpsHost, savedIpsPort, linkedUid, linkedUnitName, autoStopTimeout, savedErpApiUrl) {
+        fleetCode = config?.fleetCode ?: ""
+        plate = config?.plate ?: ""
+        vehicleType = config?.type ?: ""
+        ipsHost = savedIpsHost
+        ipsPort = savedIpsPort.toString()
+        autoStopMinutes = autoStopTimeout.toString()
+        maintenanceTarget = config?.horimetroManutencao?.toString() ?: "0.0"
+        maintenanceAlertThreshold = config?.alertaManutencaoHoras?.toString() ?: "50.0"
+        erpApiUrl = savedErpApiUrl
+    }
     
     var adminPassword by remember { mutableStateOf("") }
     val scrollState = rememberScrollState()
@@ -323,6 +339,30 @@ fun SettingsScreen(
                                 containerColor = Color.DarkGray,
                                 contentColor = NeonGreen
                             )
+                            
+                            Spacer(Modifier.height(12.dp))
+                            
+                            PlmButton(
+                                text = "CONFIGURAÇÃO DA REDE CAN (OBD2)",
+                                onClick = { onNavigateToCanBusConfig?.invoke() },
+                                icon = Icons.Default.Bluetooth,
+                                containerColor = Color.DarkGray,
+                                contentColor = NeonGreen
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    SectionHeader("INTEGRAÇÃO ERP CORPORATIVO")
+                    PlmCard {
+                        Column(modifier = Modifier.padding(12.dp)) {
+                            PlmTextField(
+                                value = erpApiUrl,
+                                onValueChange = { erpApiUrl = it },
+                                label = "URL da API do ERP (ex: https://api.empresa.com.br)",
+                                modifier = Modifier.fillMaxWidth()
+                            )
                         }
                     }
 
@@ -426,6 +466,8 @@ fun SettingsScreen(
                                 target = maintenanceTarget.toDoubleOrNull() ?: 0.0,
                                 alertAt = maintenanceAlertThreshold.toDoubleOrNull() ?: 50.0
                             )
+                            viewModel.setErpApiUrl(erpApiUrl)
+                            
                             onBack()
                         },
                         enabled = fleetCode.isNotEmpty() && plate.isNotEmpty()

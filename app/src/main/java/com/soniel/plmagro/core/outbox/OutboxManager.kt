@@ -2,13 +2,16 @@ package com.soniel.plmagro.core.outbox
 
 import android.util.Log
 import com.soniel.plmagro.api.WialonRepository
+import com.soniel.plmagro.api.ErpRepository
 import com.soniel.plmagro.model.PlmDao
 import com.soniel.plmagro.model.OutboxEventEntity
+import com.soniel.plmagro.model.UserPreferencesManager
 import com.soniel.plmagro.sync.OutboxSyncWorker
 import androidx.work.*
 import android.content.Context
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
+import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
 import kotlin.math.pow
@@ -17,6 +20,8 @@ import kotlin.math.pow
 class OutboxManager @Inject constructor(
     private val plmDao: PlmDao,
     private val wialonRepository: WialonRepository,
+    private val erpRepository: ErpRepository,
+    private val userPreferencesManager: UserPreferencesManager,
     @ApplicationContext private val context: Context
 ) {
     private val scope = CoroutineScope(SupervisorJob() + Dispatchers.IO)
@@ -100,8 +105,13 @@ class OutboxManager @Inject constructor(
         // 2.5 Processar Paradas Industriais (Prioridade Máxima + Cronologia)
         if (priorityEvents.isNotEmpty()) {
             Log.i("OUTBOX", "PARADA_REPLAY_START: ${priorityEvents.size} events")
+            val erpUrl = userPreferencesManager.erpApiUrl.first()
             for (event in priorityEvents) {
+                // Sincroniza com Wialon
                 val result = wialonRepository.syncOutboxEvent(event)
+                // Sincroniza com ERP paralelo se configurado
+                erpRepository.sendEventToErp(event, erpUrl)
+
                 if (result.isSuccess) {
                     plmDao.updateSyncEvent(event.copy(syncStatus = "ENVIADO", lastAttempt = System.currentTimeMillis(), enviadoEm = System.currentTimeMillis()))
                     Log.i("OUTBOX", "PARADA_REPLAY_SUCCESS: ${event.eventId}")
@@ -127,11 +137,16 @@ class OutboxManager @Inject constructor(
         }
 
         // 4. Processar Eventos Críticos (Cronológico um a um)
+        val erpUrl = userPreferencesManager.erpApiUrl.first()
         for (event in otherEvents) {
             if (!isActive()) break
             try {
                 delay(500) // Estabilidade socket
+                // Sincroniza com Wialon
                 val result = wialonRepository.syncOutboxEvent(event)
+                // Sincroniza com ERP
+                erpRepository.sendEventToErp(event, erpUrl)
+
                 if (result.isSuccess) {
                     plmDao.updateSyncEvent(event.copy(syncStatus = "ENVIADO", lastAttempt = System.currentTimeMillis(), enviadoEm = System.currentTimeMillis()))
                 } else {

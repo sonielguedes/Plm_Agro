@@ -11,7 +11,9 @@ import java.util.concurrent.TimeUnit
 
 import com.soniel.plmagro.api.WialonRepository
 import com.soniel.plmagro.api.WialonSessionManager
+import com.soniel.plmagro.core.hardware.CanBusManager
 import com.soniel.plmagro.core.outbox.OutboxManager
+import com.soniel.plmagro.core.p2p.P2pSyncManager
 import com.soniel.plmagro.model.UserPreferencesManager
 import dagger.hilt.android.HiltAndroidApp
 import androidx.hilt.work.HiltWorkerFactory
@@ -33,6 +35,8 @@ class PlmApplication : Application(), Configuration.Provider {
     @Inject lateinit var diagnosticRepository: DiagnosticRepository
     @Inject lateinit var outboxManager: OutboxManager
     @Inject lateinit var sensorWatchdog: com.soniel.plmagro.core.watchdog.SensorWatchdog
+    @Inject lateinit var canBusManager: CanBusManager
+    @Inject lateinit var p2pSyncManager: P2pSyncManager
     @Inject lateinit var workerFactory: HiltWorkerFactory
 
     override val workManagerConfiguration: Configuration
@@ -48,6 +52,9 @@ class PlmApplication : Application(), Configuration.Provider {
         
         // Inicia o motor de sincronização industrial
         outboxManager.startSyncLoop()
+        
+        // Inicia o motor da malha P2P
+        p2pSyncManager.startP2pEngine()
     }
 
     private fun cleanupOldData() {

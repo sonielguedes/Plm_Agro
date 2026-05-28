@@ -50,6 +50,9 @@ interface PlmDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun insertSyncEvent(event: OutboxEventEntity)
+    
+    @Insert(onConflict = OnConflictStrategy.IGNORE)
+    suspend fun insertOutboxEvent(event: OutboxEventEntity)
 
     @Update
     suspend fun updateSyncEvent(event: OutboxEventEntity)
@@ -59,6 +62,12 @@ interface PlmDao {
 
     @Query("DELETE FROM sync_outbox WHERE syncStatus = 'ENVIADO' AND timestamp < :timestamp")
     suspend fun deleteOldSyncedEvents(timestamp: Long)
+
+    @Query("SELECT * FROM sync_outbox WHERE syncStatus IN ('PENDENTE', 'ERRO', 'TENTANDO')")
+    suspend fun getPendingOutboxEventsForP2p(): List<OutboxEventEntity>
+
+    @Query("UPDATE sync_outbox SET syncStatus = :status WHERE eventId = :eventId")
+    suspend fun updateSyncStatus(eventId: String, status: String)
 
     @Query("SELECT COUNT(*) FROM sync_outbox WHERE syncStatus IN ('PENDENTE', 'TENTANDO', 'ERRO') AND retryCount < 10")
     fun getPendingCount(): Flow<Int>

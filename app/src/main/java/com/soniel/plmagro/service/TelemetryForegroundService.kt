@@ -31,6 +31,7 @@ class TelemetryForegroundService : Service() {
     private lateinit var fsm: MaquinaEstadoOperacional
     private lateinit var eventProcessor: EventProcessor
     private lateinit var watchdog: OperationalWatchdog
+    private lateinit var canBusManager: com.soniel.plmagro.core.hardware.CanBusManager
     
     private var activeJourney: Journey? = null
     private var lastGpsUpdate: Long = 0
@@ -99,6 +100,7 @@ class TelemetryForegroundService : Service() {
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
         fsm = MaquinaEstadoOperacional(repository)
         eventProcessor = EventProcessor(repository, fsm, (application as PlmApplication).diagnosticRepository)
+        canBusManager = (application as PlmApplication).canBusManager
         
         val alertMgr = com.soniel.plmagro.core.utils.AlertManager(this)
         watchdog = OperationalWatchdog(repository, alertMgr)
@@ -144,7 +146,17 @@ class TelemetryForegroundService : Service() {
         heartbeatJob?.cancel()
         heartbeatJob = serviceScope.launch {
             while (isActive) {
-                val stats = com.soniel.plmagro.core.utils.DeviceStatsUtils.getSystemStats(this@TelemetryForegroundService)
+                val stats = com.soniel.plmagro.core.utils.DeviceStatsUtils.getSystemStats(this@TelemetryForegroundService).toMutableMap()
+                
+                try {
+                    val canData = canBusManager.canBusDataFlow.first()
+                    stats["rpm"] = canData.rpm
+                    stats["engine_temp"] = canData.engineTemp
+                    stats["fuel_level"] = canData.fuelLevel
+                    stats["fuel_cons"] = canData.fuelConsumption
+                } catch (e: Exception) {
+                    Log.e(TAG, "Erro ao ler CAN no Heartbeat: ${e.message}")
+                }
                 val battery = stats["batt"] as? Int ?: 100
                 val charging = stats["charging"] as? Int ?: 0
                 val temp = stats["temp"] as? Float ?: 0f
