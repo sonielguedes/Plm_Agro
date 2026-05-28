@@ -8,6 +8,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Warning
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -15,6 +16,8 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
+import android.content.Intent
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -31,6 +34,7 @@ fun CanBusDiagnosticScreen(
     val rawLogs by viewModel.canBusRawLogs.collectAsState()
     val canData by viewModel.canBusData.collectAsState()
     val listState = rememberLazyListState()
+    val context = LocalContext.current
 
     // Auto-scroll para o último log
     LaunchedEffect(rawLogs.size) {
@@ -51,7 +55,26 @@ fun CanBusDiagnosticScreen(
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = BackgroundDark,
                     titleContentColor = TextPrimary
-                )
+                ),
+                actions = {
+                    IconButton(onClick = {
+                        val shareText = "Log CAN Bus/OBD2:\nRPM: ${canData?.rpm ?: 0}\nTemp: ${canData?.engineTemp ?: 0f}C\nNível Combustível: ${canData?.fuelLevel ?: 0f}%\nLogs Brutos:\n${rawLogs.takeLast(50).joinToString("\n")}"
+                        val sendIntent = Intent().apply {
+                            action = Intent.ACTION_SEND
+                            putExtra(Intent.EXTRA_TEXT, shareText)
+                            type = "text/plain"
+                            setPackage("com.whatsapp")
+                        }
+                        try {
+                            context.startActivity(sendIntent)
+                        } catch (e: Exception) {
+                            val chooserIntent = Intent.createChooser(sendIntent, "Compartilhar Logs CAN")
+                            context.startActivity(chooserIntent)
+                        }
+                    }) {
+                        Icon(Icons.Default.Share, contentDescription = "Compartilhar via WhatsApp", tint = NeonGreen)
+                    }
+                }
             )
         },
         containerColor = BackgroundDark
