@@ -56,6 +56,14 @@ fun AboutSystemScreen(onBack: () -> Unit) {
                 AboutRow("Versao", BuildConfig.VERSION_NAME)
                 AboutRow("Codigo", BuildConfig.VERSION_CODE.toString())
                 AboutRow("Build", if (BuildConfig.DEBUG) "DEBUG" else "RELEASE")
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                HorizontalDivider(modifier = Modifier.padding(vertical = 12.dp), color = Color.DarkGray)
+                Text("MÓDULOS ATIVOS", color = NeonGreen, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(8.dp))
+                AboutRow("Sincronização", "Wialon P2P & ERP Corporativo")
+                AboutRow("Telemetria", "Rede CAN / OBD2 (ELM 327)")
+                AboutRow("Navegação", "Regra de Parada com TTS")
             }
         }
     }
