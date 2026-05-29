@@ -1,6 +1,7 @@
 package com.soniel.plmagro.core.outbox
 
 import android.util.Log
+import android.provider.Settings
 import com.soniel.plmagro.api.*
 import com.soniel.plmagro.model.*
 import kotlinx.coroutines.delay
@@ -44,7 +45,11 @@ class SincronizadorOperacional(
             }
 
             val request = SyncBatchRequest(
-                deviceId = android.os.Build.SERIAL, // Ou um ID persistente do tablet
+                // Build.SERIAL e deprecated e retorna "UNKNOWN" em Android modernos. ANDROID_ID e o minimo aceitavel.
+                deviceId = Settings.Secure.getString(
+                    com.soniel.plmagro.PlmApplication.instance.contentResolver,
+                    Settings.Secure.ANDROID_ID
+                ) ?: "UNKNOWN_DEVICE",
                 sessionId = java.util.UUID.randomUUID().toString(),
                 batchId = java.util.UUID.randomUUID().toString(),
                 events = eventsPayload

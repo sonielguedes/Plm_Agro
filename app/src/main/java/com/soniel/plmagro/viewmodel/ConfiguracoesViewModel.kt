@@ -32,8 +32,8 @@ class ConfiguracoesViewModel : ViewModel() {
         val trimmed = senha.trim()
         val isCorrect = trimmed == "158853"
         
-        Log.d("CONFIG", "Senha digitada: '$trimmed'")
-        Log.d("CONFIG", "Resultado validação: $isCorrect")
+        // NUNCA logar senha (nem em debug). Isso vaza credencial em logcat/MDM.
+        Log.d("CONFIG", "Resultado validação senha admin: $isCorrect")
 
         if (isCorrect) {
             _desbloqueado.value = true

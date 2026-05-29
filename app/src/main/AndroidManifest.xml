@@ -74,6 +74,19 @@
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/file_paths" />
         </provider>
+
+        <!--
+          WorkManager: este app usa inicializacao sob demanda via Configuration.Provider (PlmApplication).
+          Removemos o initializer default do androidx.startup para evitar dupla inicializacao.
+        -->
+        <provider
+            android:name="androidx.startup.InitializationProvider"
+            android:authorities="${applicationId}.androidx-startup"
+            tools:node="merge">
+            <meta-data
+                android:name="androidx.work.WorkManagerInitializer"
+                tools:node="remove" />
+        </provider>
     </application>
 
 </manifest>
